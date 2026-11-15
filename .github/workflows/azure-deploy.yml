@@ -1,8 +1,11 @@
-name: Deploy to Azure
+name: Deploy backend to Azure
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 
 jobs:
@@ -13,9 +16,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
+      - name: Install and test
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test_secret
+          SESSION_SECRET: test_secret
+        run: |
+          npm ci
+          npm test
+      - name: Keep production dependencies only
+        working-directory: backend
+        run: npm prune --omit=dev
       - uses: azure/webapps-deploy@v3
         with:
           app-name: node-project-g1-m-web-app
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          package: backend
