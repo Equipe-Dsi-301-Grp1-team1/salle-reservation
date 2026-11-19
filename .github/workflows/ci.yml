@@ -23,6 +23,13 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: backend/package-lock.json
+      # mongodb-memory-server downloads a mongod binary (~100MB) on first run.
+      # Cache it so CI does not re-download (and flake) on every build.
+      - name: Cache MongoDB test binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-7.0.14
       - run: npm ci
       - run: npm test
 
