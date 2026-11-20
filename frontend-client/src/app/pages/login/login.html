@@ -1,0 +1,22 @@
+<div class="login-container">
+    <h2>Connexion client</h2>
+    <form (ngSubmit)="connecter()" #loginForm="ngForm">
+        <div>
+            <label for="email">Email :</label>
+            <input id="email" type="email" name="email" [(ngModel)]="email" required />
+        </div>
+        <div>
+            <label for="password">Mot de passe :</label>
+            <input id="password" type="password" name="password" [(ngModel)]="password" required />
+        </div>
+        <button type="submit" [disabled]="loginForm.invalid">
+            Se connecter
+        </button>
+    </form>
+    <p class="success">{{ message }}</p>
+    <p class="error">{{ erreur }}</p>
+    <p>
+        Pas encore de compte ?
+        <a routerLink="/register">Créer un compte</a>
+    </p>
+</div>

@@ -1,0 +1,11 @@
+<div class="home-container">
+    <h2>Bienvenue dans votre espace client !</h2>
+    <div *ngIf="user">
+        <p>Bonjour, <strong>{{ user.nom }}</strong> !</p>
+        <p>Email : {{ user.email }}</p>
+    </div>
+    <p>Vous êtes connecté à votre compte.</p>
+    <button (click)="deconnecter()">
+        Se déconnecter
+    </button>
+</div>
