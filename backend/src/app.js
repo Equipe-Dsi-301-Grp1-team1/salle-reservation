@@ -10,10 +10,7 @@ const agentCreneauViewRoutes = require('./routes/agentCreneauViewRoutes');
 
 const { agentOnly } = require('./middlewares/identify');
 
-app.use(cors({
-    origin: 'http://localhost:4200',
-    credentials: true
-}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
