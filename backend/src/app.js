@@ -8,7 +8,7 @@ const app = express();
 const creneauRoutes = require('./routes/creneauRoutes');
 const agentCreneauViewRoutes = require('./routes/agentCreneauViewRoutes');
 
-const { agentOnly } = require('./middleware/identify');
+const { agentOnly } = require('./middlewares/identify');
 
 app.use(cors({
     origin: 'http://localhost:4200',
