@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Agent</title>
+</head>
+
+<body>
+    <h1>Bienvenue dans votre espace agent</h1>
+    <p>
+        Bonjour <strong>
+            <%= agent.nom %>
+        </strong> !
+    </p>
+    <p>Vous êtes connecté à votre espace professionnel.</p>
+    <button id="logoutBtn">Se déconnecter</button>
+    <p id="message"></p>
+    <script>
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            const message = document.getElementById('message');
+            try {
+                const response = await fetch('/api/agent/logout', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    message.textContent = data.message;
+
+                    window.location.href = '/agent/login';
+                } else {
+                    message.textContent = data.message;
+                }
+
+            } catch (error) {
+                message.textContent = 'Erreur lors de la déconnexion';
+            }
+        });
+    </script>
+</body>
+
+</html>
