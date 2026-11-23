@@ -1,0 +1,46 @@
+<% const selected = calendar.selected; %>
+<% const selectedDate = selected ? selected.date : ''; %>
+<% const gridUrl = '/agent/rooms/' + roomId + '/creneaux'; %>
+<%- include('../partials/header', { title: 'Disponibilités · ' + calendar.room.name }) %>
+
+<%- include('../partials/calendar-grid', { gridUrl: gridUrl, dayParam: 'day', selectedDate: selectedDate }) %>
+
+<% if (selected) { %>
+  <div class="panel">
+    <p><strong><%= selected.label %> : <%= selected.stateText %></strong></p>
+
+    <% if (selected.state === 'bloque') { %>
+      <% if (selected.reason) { %><p>Raison : <%= selected.reason %></p><% } %>
+      <form method="POST" action="<%= gridUrl %>/<%= selected.date %>/unblock">
+        <input type="hidden" name="agentId" value="<%= agentId %>">
+        <button type="submit">Débloquer cette date</button>
+      </form>
+    <% } %>
+
+    <% if (selected.state === 'libre') { %>
+      <form class="inline" method="POST" action="<%= gridUrl %>/<%= selected.date %>/delete" onsubmit="return confirm('Retirer cette date ?')">
+        <input type="hidden" name="agentId" value="<%= agentId %>">
+        <button type="submit">Retirer cette date</button>
+      </form>
+      <a href="<%= gridUrl %>/block?agentId=<%= agentId %>&date=<%= selected.date %>">Bloquer cette date</a>
+    <% } %>
+
+    <% if (selected.state === 'reserve') { %>
+      <p>Cette date est réservée.</p>
+    <% } %>
+  </div>
+<% } %>
+
+<form method="POST" action="<%= gridUrl %>">
+  <input type="hidden" name="agentId" value="<%= agentId %>">
+  <label>Date à ouvrir
+    <input type="date" name="date" value="<%= selected && selected.state === 'non-ouvert' ? selected.date : '' %>" required>
+  </label>
+  <button type="submit">Ouvrir cette date</button>
+</form>
+
+<p class="links">
+  <a href="<%= gridUrl %>/recurring?agentId=<%= agentId %>">Ouvrir des jours récurrents</a>
+  <a href="<%= gridUrl %>/block?agentId=<%= agentId %>">Bloquer une date</a>
+</p>
+<%- include('../partials/footer') %>
