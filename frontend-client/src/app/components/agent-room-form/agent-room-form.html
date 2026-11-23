@@ -1,0 +1,79 @@
+<div class="form-container">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">{{ isEditMode ? 'Modifier la salle' : 'Créer une nouvelle salle' }}</h2>
+      <p class="page-subtitle">Renseignez les caractéristiques principales de votre espace</p>
+    </div>
+  </div>
+
+  <div class="card-box">
+    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+    <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+    <form [formGroup]="roomForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="name" class="form-label">Nom de la salle *</label>
+        <input id="name" type="text" class="form-control" placeholder="Ex : Salle Carthage" formControlName="name" />
+        <small class="error-text" *ngIf="roomForm.get('name')?.touched && roomForm.get('name')?.invalid">
+          Le nom de la salle est obligatoire.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">Description *</label>
+        <textarea id="description" rows="3" class="form-control" placeholder="Décrivez l'ambiance, la luminosité, l'agencement..." formControlName="description"></textarea>
+        <small class="error-text" *ngIf="roomForm.get('description')?.touched && roomForm.get('description')?.invalid">
+          La description est obligatoire.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="address" class="form-label">Adresse complète *</label>
+        <input id="address" type="text" class="form-control" placeholder="Ex : 12 Avenue Habib Bourguiba, Tunis" formControlName="address" />
+        <small class="error-text" *ngIf="roomForm.get('address')?.touched && roomForm.get('address')?.invalid">
+          L'adresse est obligatoire.
+        </small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="capacity" class="form-label">Capacité (personnes) *</label>
+          <input id="capacity" type="number" min="1" class="form-control" formControlName="capacity" />
+          <small class="error-text" *ngIf="roomForm.get('capacity')?.touched && roomForm.get('capacity')?.invalid">
+            La capacité doit être supérieure à 0.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="pricePerHour" class="form-label">Prix par heure (€) *</label>
+          <input id="pricePerHour" type="number" min="1" class="form-control" formControlName="pricePerHour" />
+          <small class="error-text" *ngIf="roomForm.get('pricePerHour')?.touched && roomForm.get('pricePerHour')?.invalid">
+            Le prix doit être supérieur à 0.
+          </small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Équipements inclus</label>
+        <div class="equipments-grid">
+          <label class="equipment-item" *ngFor="let eq of availableEquipments" [for]="'eq-' + eq">
+            <input
+              type="checkbox"
+              [id]="'eq-' + eq"
+              [checked]="selectedEquipments.includes(eq)"
+              (change)="onEquipmentChange(eq, $event)"
+            />
+            <span>{{ equipmentLabels[eq] || eq }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          {{ isEditMode ? 'Enregistrer les modifications' : 'Créer la salle' }}
+        </button>
+        <a routerLink="/agent/rooms" class="btn btn-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
