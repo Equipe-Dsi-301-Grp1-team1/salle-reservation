@@ -1,0 +1,65 @@
+<header class="page-head">
+  <div><h1>Demandes de réservation</h1><p class="muted">Ouvrez une demande pour voir l’historique du client avant de répondre.</p></div>
+</header>
+
+<section class="stats">
+  <div class="stat"><span>En attente</span><strong><%= counts.PENDING || 0 %></strong></div>
+  <div class="stat"><span>Validées</span><strong><%= counts.VALIDATED || 0 %></strong></div>
+  <div class="stat"><span>Payées</span><strong><%= counts.PAID || 0 %></strong></div>
+  <div class="stat"><span>Revenus du mois</span><strong><%= f.euro(monthRevenueCents) %></strong></div>
+</section>
+
+<div class="toolbar">
+  <nav class="filters" aria-label="Filtrer par statut">
+    <% [['', 'Toutes'], ['PENDING', 'En attente'], ['VALIDATED', 'Validées'], ['REJECTED', 'Refusées']].forEach((c) => { %>
+      <a class="filter <%= status === c[0] ? 'is-active' : '' %>" href="/bookings?<%= new URLSearchParams(Object.assign({}, c[0] ? { status: c[0] } : {}, room ? { room } : {})).toString() %>"><%= c[1] %></a>
+    <% }) %>
+  </nav>
+  <form method="get" action="/bookings" class="room-filter">
+    <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+    <label class="sr-only" for="room-filter">Filtrer par salle</label>
+    <select id="room-filter" name="room" data-autosubmit>
+      <option value="">Toutes les salles</option>
+      <% rooms.forEach((r) => { %><option value="<%= r.id %>" <%= room === r.id ? 'selected' : '' %>><%= r.name %></option><% }) %>
+    </select>
+    <noscript><button class="btn btn--light btn--sm" type="submit">Filtrer</button></noscript>
+  </form>
+</div>
+
+<% if (!bookings.length) { %>
+  <div class="card empty"><h2>Aucune demande</h2><p class="muted">Aucune demande ne correspond à ces filtres pour le moment.</p></div>
+<% } else { %>
+  <div class="table-card">
+    <table class="table">
+      <thead><tr><th>Client</th><th>Salle</th><th>Date</th><th>Durée · invités</th><th>Montant</th><th>Statut</th><th>Action</th></tr></thead>
+      <tbody>
+        <% bookings.forEach((b) => { %>
+          <tr>
+            <td><a class="link-strong" href="/bookings/<%= b.id %>"><%= b.client.name %></a></td>
+            <td><%= b.room.name %></td>
+            <td><%= f.dayMonth(b.date) %></td>
+            <td><%= b.hours %> h · <%= b.guests %></td>
+            <td><strong><%= f.euro(b.amountCents) %></strong></td>
+            <td><%- include('../partials/status-badge', { status: b.status, label: b.statusLabel }) %></td>
+            <td>
+              <% if (b.status === 'PENDING') { %>
+                <a class="btn btn--primary btn--sm" href="/bookings/<%= b.id %>">Examiner</a>
+              <% } else if (b.status === 'VALIDATED') { %>
+                <span class="muted">Paiement sous <%= b.hoursLeftToPay != null ? b.hoursLeftToPay : f.hoursLeft(b.expiresAt) %> h</span>
+              <% } else if (b.status === 'PAID' || b.status === 'COMPLETED') { %>
+                <span class="muted">Confirmée</span>
+              <% } else if (b.status === 'REJECTED') { %>
+                <span class="muted"><%= b.rejectionReason || 'Refusée' %></span>
+              <% } else if (b.status === 'EXPIRED') { %>
+                <span class="muted">Délai de paiement dépassé</span>
+              <% } else { %>
+                <span class="muted">Annulée par le client</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <%- include('../partials/pagination', { page, totalPages, query, basePath: '/bookings' }) %>
+<% } %>
