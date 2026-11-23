@@ -1,9 +1,7 @@
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const { agentOnly } = require('./middlewares/identify');
-const creneauRoutes = require('./routes/creneauRoutes');
-const agentCreneauViewRoutes = require('./routes/agentCreneauViewRoutes');
 
 const app = express();
 
@@ -11,12 +9,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname,'..' ,'views'));
+app.set('views', path.join(__dirname, 'views'));
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-app.use('/api', creneauRoutes);
-app.use('/agent', agentOnly, agentCreneauViewRoutes);
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
 
 module.exports = app;
