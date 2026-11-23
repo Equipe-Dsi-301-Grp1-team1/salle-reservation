@@ -1,4 +1,4 @@
-```javascript
+
 const mongoose = require('mongoose');
 const os = require('node:os');
 const request = require('supertest');
@@ -277,4 +277,3 @@ test('remove shows the error when a request is pending that day', async () => {
 
   expect(await Creneau.countDocuments({ roomId: room._id })).toBe(1);
 });
-```
