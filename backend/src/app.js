@@ -10,7 +10,7 @@ const creneauRoutes = require('./routes/creneauRoutes');
 const agentCreneauViewRoutes = require('./routes/agentCreneauViewRoutes');
 
 
-const { agentOnly } = require('backend/src/middleware/identify');
+const { agentOnly } = require('./middlewares/identify');
 
 app.use(cors());
 app.use(express.json());
