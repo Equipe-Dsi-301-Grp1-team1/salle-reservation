@@ -45,14 +45,23 @@ afterEach(async () => {
   await Room.deleteMany({});
 });
 
-const url = (path = '') => `/agent/rooms/${room._id}/creneaux${path}`;
-
-function get(path, query) {
-  return request(app).get(url(path)).query({ agentId, ...query });
+function url(path = '') {
+  return '/agent/rooms/' + room._id + '/creneaux' + path;
 }
 
-function post(path, data) {
-  return request(app).post(url(path)).type('form').send({ agentId, ...data });
+function get(path, query = {}) {
+  return request(app)
+    .get(url(path))
+    .set('x-test-agent-id', agentId)
+    .query({ agentId, ...query });
+}
+
+function post(path, data = {}) {
+  return request(app)
+    .post(url(path))
+    .set('x-test-agent-id', agentId)
+    .type('form')
+    .send({ agentId, ...data });
 }
 
 function makeCreneau(dateText, status, reason) {
@@ -77,7 +86,12 @@ test('pages without agentId are refused', async () => {
 
 test('another agent cannot see the room calendar', async () => {
   const other = new mongoose.Types.ObjectId().toString();
-  const res = await request(app).get(url()).query({ agentId: other });
+
+  const res = await request(app)
+    .get(url())
+    .set('x-test-agent-id', other)
+    .query({ agentId: other });
+
   expect(res.statusCode).toBe(403);
 });
 
