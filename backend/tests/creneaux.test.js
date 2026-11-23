@@ -27,9 +27,11 @@ afterAll(async () => {
 
 beforeEach(async () => {
   agentId = new mongoose.Types.ObjectId().toString();
+
   room = await Room.create({
     agentId,
     name: 'Salle Carthage',
+    description: 'Salle de réunion à Tunis',
     address: 'Tunis',
     capacity: 50,
     pricePerHour: 100,
