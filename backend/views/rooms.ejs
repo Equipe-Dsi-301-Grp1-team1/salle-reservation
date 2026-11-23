@@ -1,0 +1,45 @@
+<%- include('partials/head', { title: 'Les salles' }) %>
+
+<div class="entete">
+    <h1>Les salles</h1>
+    <a class="btn" href="/rooms/new">Ajouter une salle</a>
+</div>
+
+<% if (rooms.length === 0) { %>
+    <p class="vide">Aucune salle pour le moment. Ajoutez la première salle pour la proposer aux clients.</p>
+<% } else { %>
+    <ul class="liste">
+        <% rooms.forEach((r) => { %>
+            <li class="ligne">
+                <% if (r.photos.length) { %>
+                    <img class="vignette" src="<%= r.photos[0] %>" alt="Photo de <%= r.name %>">
+                <% } else { %>
+                    <div class="vignette vignette-vide">Aucune photo</div>
+                <% } %>
+
+                <div class="infos">
+                    <h2><%= r.name %></h2>
+                    <p class="adresse"><%= r.address %></p>
+                    <p><%= r.capacity %> personnes, <%= r.pricePerHour %> € par heure</p>
+                    <p class="equip"><%= r.reviewCount > 0 ? 'Note : ' + r.ratingAverage.toFixed(1).replace('.', ',') + ' / 5 (' + r.reviewCount + ' avis)' : 'Aucun avis pour le moment' %></p>
+                </div>
+
+                <div class="actions">
+                    <span class="statut <%= r.isPublished ? 'publiee' : 'masquee' %>">
+                        <%= r.isPublished ? 'Publiée' : 'Masquée' %>
+                    </span>
+                    <a class="btn btn-clair" href="/rooms/<%= r.id %>/edit">Modifier</a>
+                    <form method="post" action="/rooms/<%= r.id %>/toggle-publish">
+                        <button class="btn btn-clair" type="submit"><%= r.isPublished ? 'Masquer' : 'Publier' %></button>
+                    </form>
+                    <form method="post" action="/rooms/<%= r.id %>/delete"
+                          data-confirm="Supprimer la salle « <%= r.name %> » ? Cette action est définitive.">
+                        <button class="btn btn-danger" type="submit">Supprimer</button>
+                    </form>
+                </div>
+            </li>
+        <% }) %>
+    </ul>
+<% } %>
+
+<%- include('partials/foot') %>

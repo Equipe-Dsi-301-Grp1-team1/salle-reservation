@@ -1,0 +1,70 @@
+<% const editing = Boolean(room.id); %>
+<%- include('partials/head', { title: editing ? 'Modifier la salle' : 'Nouvelle salle' }) %>
+
+<div class="entete">
+    <h1><%= editing ? 'Modifier la salle' : 'Ajouter une salle' %></h1>
+    <a class="btn btn-clair" href="/rooms">Retour aux salles</a>
+</div>
+
+<% if (errors.length) { %>
+    <div class="erreurs" role="alert">
+        <p>Corrigez les points suivants :</p>
+        <ul>
+            <% errors.forEach((e) => { %><li><%= e %></li><% }) %>
+        </ul>
+    </div>
+<% } %>
+
+<form class="formulaire" method="post" action="<%= editing ? '/rooms/' + room.id : '/rooms' %>">
+    <label for="name">Nom de la salle</label>
+    <input id="name" name="name" type="text" value="<%= room.name || '' %>" required>
+
+    <label for="description">Description (facultative)</label>
+    <textarea id="description" name="description" rows="4"><%= room.description || '' %></textarea>
+
+    <label for="address">Adresse</label>
+    <input id="address" name="address" type="text" value="<%= room.address || '' %>" required>
+
+    <div class="deux">
+        <div>
+            <label for="capacity">Capacité (personnes)</label>
+            <input id="capacity" name="capacity" type="number" min="1" value="<%= room.capacity || '' %>" required>
+        </div>
+        <div>
+            <label for="pricePerHour">Prix par heure (€)</label>
+            <input id="pricePerHour" name="pricePerHour" type="number" min="0.01" step="0.01" value="<%= room.pricePerHour || '' %>" required>
+        </div>
+    </div>
+
+    <button class="btn" type="submit"><%= editing ? 'Enregistrer les modifications' : 'Créer la salle' %></button>
+</form>
+
+<% if (editing) { %>
+    <section class="photos">
+        <h2>Photos</h2>
+
+        <% if (room.photos.length === 0) { %>
+            <p class="vide">Cette salle n’a pas encore de photo.</p>
+        <% } else { %>
+            <ul class="grille-photos">
+                <% room.photos.forEach((p) => { %>
+                    <li>
+                        <img src="<%= p %>" alt="Photo de <%= room.name %>">
+                        <form method="post" action="/rooms/<%= room.id %>/photos/<%= p.split('/').pop() %>/delete"
+                              data-confirm="Supprimer cette photo ?">
+                            <button class="btn btn-danger" type="submit">Supprimer</button>
+                        </form>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+
+        <form class="formulaire" method="post" action="/rooms/<%= room.id %>/photos" enctype="multipart/form-data">
+            <label for="photos">Ajouter des photos (5 photos maximum par salle, JPG, PNG ou WebP, 2 Mo chacune)</label>
+            <input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+            <button class="btn" type="submit">Envoyer les photos</button>
+        </form>
+    </section>
+<% } %>
+
+<%- include('partials/foot') %>
