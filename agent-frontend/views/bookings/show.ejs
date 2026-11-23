@@ -1,0 +1,69 @@
+<% const c = booking.client; const hc = history.counts || {}; const items = history.items || []; %>
+<a class="back" href="/bookings">← Retour aux demandes</a>
+<header class="page-head">
+  <div class="title-row"><h1>Demande de <%= c.name %></h1><%- include('../partials/status-badge', { status: booking.status, label: booking.statusLabel }) %></div>
+</header>
+
+<div class="grid-detail">
+  <div class="stack">
+    <section class="card">
+      <h2>Détails de la demande</h2>
+      <dl class="details">
+        <div><dt>Salle</dt><dd><%= booking.room.name %></dd></div>
+        <div><dt>Date</dt><dd><%= f.longDateFr(booking.date) %></dd></div>
+        <div><dt>Durée</dt><dd><%= booking.hours %> heure<%= booking.hours > 1 ? 's' : '' %></dd></div>
+        <div><dt>Invités</dt><dd><%= booking.guests %><%= booking.room.capacity ? ' sur ' + booking.room.capacity : '' %></dd></div>
+        <div><dt>Événement</dt><dd><%= booking.eventType %></dd></div>
+        <div><dt>Envoyée</dt><dd>le <%= f.dateTimeFr(booking.createdAt) %></dd></div>
+      </dl>
+      <% if (booking.status === 'REJECTED' && booking.rejectionReason) { %><p class="muted">Motif du refus : <%= booking.rejectionReason %></p><% } %>
+    </section>
+
+    <section class="card">
+      <div class="card__head"><h2>Historique de <%= c.name %></h2><span class="muted small">Sur vos salles uniquement</span></div>
+      <div class="tiles">
+        <div class="tile tile--violet"><strong><%= hc.total || 0 %></strong><span>réservation<%= (hc.total || 0) > 1 ? 's' : '' %></span></div>
+        <div class="tile tile--green"><strong><%= hc.completed || 0 %></strong><span>terminée<%= (hc.completed || 0) > 1 ? 's' : '' %></span></div>
+        <div class="tile tile--grey"><strong><%= hc.cancelled || 0 %></strong><span>annulée<%= (hc.cancelled || 0) > 1 ? 's' : '' %></span></div>
+        <div class="tile tile--red"><strong><%= hc.rejected || 0 %></strong><span>refusée<%= (hc.rejected || 0) > 1 ? 's' : '' %></span></div>
+        <div class="tile"><strong><%= f.euro(history.paidTotalCents) %></strong><span>déjà payés</span></div>
+      </div>
+      <% if (!items.length) { %>
+        <p class="muted history-empty">Première demande de ce client.</p>
+      <% } else { %>
+        <table class="table table--plain">
+          <tbody>
+            <% items.forEach((h) => { %>
+              <tr><td><%= f.dateFr(h.date) %></td><td><%= h.roomName %></td><td><strong><%= f.euro(h.amountCents) %></strong></td><td><%- include('../partials/status-badge', { status: h.status, label: h.statusLabel }) %></td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </section>
+  </div>
+
+  <aside class="card">
+    <p class="muted">Montant de la demande</p>
+    <p class="amount"><%= f.euro(booking.amountCents) %></p>
+    <p class="muted small"><%= f.euro(booking.hourlyPriceCents) %> × <%= booking.hours %> h</p>
+
+    <% if (booking.status === 'PENDING') { %>
+      <button class="btn btn--primary btn--block" type="button" data-modal-open="validate-modal">Valider la demande</button>
+      <p class="muted small">Le client aura 48 h pour payer.</p>
+      <hr>
+      <form method="post" action="/bookings/<%= booking.id %>/reject">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label class="field"><span>Motif du refus (obligatoire)</span>
+          <input type="text" name="reason" maxlength="500" required placeholder="Salle indisponible ce jour-là"></label>
+        <button class="btn btn--danger-outline btn--block" type="submit">Refuser la demande</button>
+      </form>
+      <p class="muted small">Le client est prévenu par e-mail de votre réponse.</p>
+    <% } else { %>
+      <p class="muted">Cette demande a déjà été traitée : aucune action n’est possible.</p>
+    <% } %>
+  </aside>
+</div>
+
+<% if (booking.status === 'PENDING') { %>
+  <%- include('../partials/modal', { id: 'validate-modal', title: 'Valider cette demande ?', message: 'Le jour sera réservé pour ' + c.name + '. Le client aura 48 h pour payer, passé ce délai la demande expirera.', action: '/bookings/' + booking.id + '/validate', confirmLabel: 'Valider la demande', danger: false, fields: {} }) %>
+<% } %>
