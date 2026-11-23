@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; color: #222; }
+    .topbar { background: #1f2937; color: white; padding: 12px 20px; display: flex; gap: 20px; align-items: center; }
+    .topbar a { color: white; text-decoration: none; }
+    .topbar .logo { font-weight: bold; margin-right: auto; }
+    .content { max-width: 760px; margin: 25px auto; padding: 0 15px; }
+    .error { background: #fde2e2; color: #9b1c1c; padding: 10px; }
+    .message { background: #def7e3; color: #1d6b2f; padding: 10px; }
+    label { display: block; margin-top: 12px; }
+    input[type=date], input[type=text] { padding: 6px; }
+    button { margin-top: 12px; padding: 7px 14px; cursor: pointer; }
+    table.calendar { border-collapse: collapse; width: 100%; max-width: 420px; }
+    table.calendar th, table.calendar td { width: 14%; height: 40px; text-align: center; padding: 0; }
+    table.calendar td a { display: block; line-height: 36px; margin: 2px; color: inherit; text-decoration: none; }
+    td.libre a { border: 2px solid #222; }
+    td.reserve a { background: #bbb; border: 2px solid #bbb; }
+    td.bloque a { background: #000; color: white; border: 2px solid #000; }
+    td.non-ouvert a { border: 2px dashed #999; color: #777; }
+    td.selected a { outline: 3px solid #2563eb; }
+    .legend span { margin-right: 14px; font-size: 14px; }
+    .panel { border: 1px solid #ccc; padding: 12px; margin: 15px 0; }
+    .weekdays label { display: inline-block; margin-right: 12px; }
+    .links a { margin-right: 15px; }
+    form.inline { display: inline; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo">Logo</span>
+    <span>Agent</span>
+    <a href="/agent/dashboard?agentId=<%= agentId %>">Tableau de bord</a>
+    <a href="/agent/rooms?agentId=<%= agentId %>">Mes salles</a>
+    <a href="/agent/rooms/<%= roomId %>/creneaux?agentId=<%= agentId %>">Disponibilités</a>
+    <a href="/agent/requests?agentId=<%= agentId %>">Demandes</a>
+    <a href="/logout">Quitter</a>
+  </div>
+  <div class="content">
+  <h1><%= title %></h1>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <% if (message) { %><p class="message"><%= message %></p><% } %>

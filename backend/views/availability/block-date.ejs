@@ -1,0 +1,17 @@
+<% const selectedDate = values.date; %>
+<% const gridUrl = '/agent/rooms/' + roomId + '/creneaux/block'; %>
+<%- include('../partials/header', { title: 'Bloquer une date' }) %>
+
+<%- include('../partials/calendar-grid', { gridUrl: gridUrl, dayParam: 'date', selectedDate: selectedDate }) %>
+
+<form method="POST" action="/agent/rooms/<%= roomId %>/creneaux/block">
+  <input type="hidden" name="agentId" value="<%= agentId %>">
+  <label>Date
+    <input type="date" name="date" value="<%= values.date %>" required>
+  </label>
+  <label>Raison (facultative)
+    <input type="text" name="reason" value="<%= values.reason %>" placeholder="maintenance, fermeture...">
+  </label>
+  <button type="submit">Bloquer cette date</button>
+</form>
+<%- include('../partials/footer') %>

@@ -6,6 +6,7 @@ const schema = new Schema({
   timeEnd: { type: String, required: true },   
   status: { type: String, enum: ['DISPONIBLE', 'RESERVE', 'BLOQUE'], default: 'DISPONIBLE' },
   reservationId: { type: Schema.Types.ObjectId, ref: 'Reservation', default: null },
-});
+  blockReason: { type: String, default: '' },
+}, { collection: 'creneaux' });
 schema.index({ roomId: 1, date: 1, timeStart: 1 }, { unique: true });
 module.exports = model('Creneau', schema);
