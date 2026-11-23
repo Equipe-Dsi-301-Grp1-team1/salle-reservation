@@ -1,0 +1,30 @@
+<%- include('../partials/header', { title: 'Ouvrir des jours récurrents' }) %>
+<form method="POST" action="/agent/rooms/<%= roomId %>/creneaux/recurring">
+  <input type="hidden" name="agentId" value="<%= agentId %>">
+
+  <p>Jours de la semaine</p>
+  <div class="weekdays">
+    <% weekDays.forEach(function (day) { %>
+      <label title="<%= day.name %>">
+        <input type="checkbox" name="days" value="<%= day.number %>" <%= values.days.includes(day.number) ? 'checked' : '' %>>
+        <%= day.letter %>
+      </label>
+    <% }) %>
+  </div>
+
+  <label>Du
+    <input type="date" name="startDate" value="<%= values.startDate %>" required>
+  </label>
+  <label>Au
+    <input type="date" name="endDate" value="<%= values.endDate %>" required>
+  </label>
+
+  <% if (previewText) { %>
+    <p><strong><%= previewText %></strong></p>
+    <p>Les dates bloquées ou réservées ne sont pas modifiées.</p>
+  <% } %>
+
+  <button type="submit" formmethod="GET" formaction="/agent/rooms/<%= roomId %>/creneaux/recurring">Voir l'aperçu</button>
+  <button type="submit">Générer les dates</button>
+</form>
+<%- include('../partials/footer') %>
