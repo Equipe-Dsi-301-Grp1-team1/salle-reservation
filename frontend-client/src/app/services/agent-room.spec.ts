@@ -1,12 +1,15 @@
 import { TestBed } from '@angular/core/testing';
-import { AgentRoom } from './agent-room';
+import { provideHttpClient } from '@angular/common/http';
+import { AgentRoomService } from './agent-room';
 
-describe('AgentRoom', () => {
-  let service: AgentRoom;
+describe('AgentRoomService', () => {
+  let service: AgentRoomService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(AgentRoom);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient()],
+    });
+    service = TestBed.inject(AgentRoomService);
   });
 
   it('should be created', () => {

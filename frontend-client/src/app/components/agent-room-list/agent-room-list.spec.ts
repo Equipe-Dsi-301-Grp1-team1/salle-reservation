@@ -1,16 +1,29 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AgentRoomList } from './agent-room-list';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { AgentRoomListComponent } from './agent-room-list';
+import { AgentRoomService } from '../../services/agent-room';
 
-describe('AgentRoomList', () => {
-  let component: AgentRoomList;
-  let fixture: ComponentFixture<AgentRoomList>;
+describe('AgentRoomListComponent', () => {
+  let component: AgentRoomListComponent;
+  let fixture: ComponentFixture<AgentRoomListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AgentRoomList],
+      imports: [AgentRoomListComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: AgentRoomService,
+          useValue: {
+            getMyRooms: () => of([]),
+            deleteRoom: () => of({ message: '' }),
+          },
+        },
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AgentRoomList);
+    fixture = TestBed.createComponent(AgentRoomListComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

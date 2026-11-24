@@ -1,16 +1,31 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AgentRoomForm } from './agent-room-form';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { AgentRoomFormComponent } from './agent-room-form';
+import { AgentRoomService } from '../../services/agent-room';
 
-describe('AgentRoomForm', () => {
-  let component: AgentRoomForm;
-  let fixture: ComponentFixture<AgentRoomForm>;
+describe('AgentRoomFormComponent', () => {
+  let component: AgentRoomFormComponent;
+  let fixture: ComponentFixture<AgentRoomFormComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AgentRoomForm],
+      imports: [AgentRoomFormComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: AgentRoomService,
+          useValue: {
+            getAllowedEquipments: () => of([]),
+            getRoomById: () => of(null),
+            createRoom: () => of({ message: '', room: {} }),
+            updateRoom: () => of({ message: '', room: {} }),
+          },
+        },
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AgentRoomForm);
+    fixture = TestBed.createComponent(AgentRoomFormComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
