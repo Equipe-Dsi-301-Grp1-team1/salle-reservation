@@ -43,6 +43,10 @@
             <a class="payer" [routerLink]="['/reservations', booking.id, 'paiement']">Payer maintenant</a>
         </div>
 
+        <div class="actions" *ngIf="booking.status === 'PAYEE' || booking.status === 'TERMINEE'">
+            <button type="button" class="recu" (click)="telechargerRecu()">Télécharger le reçu PDF</button>
+        </div>
+
         <div class="actions" *ngIf="booking.status === 'TERMINEE'">
             <a class="payer" [routerLink]="['/reservations', booking.id, 'avis']">Laisser un avis</a>
         </div>

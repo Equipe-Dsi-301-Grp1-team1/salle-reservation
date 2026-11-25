@@ -166,6 +166,13 @@ export class BookingService {
         return this.http.get<RoomReviews>(`${this.apiUrl}/rooms/${roomId}/reviews`);
     }
 
+    downloadReceipt(id: string): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/bookings/${id}/receipt`, {
+            headers: this.headers(),
+            responseType: 'blob'
+        });
+    }
+
     listPayments(): Observable<PaymentItem[]> {
         return this.http.get<PaymentItem[]>(`${this.apiUrl}/payments/me`, {
             headers: this.headers()

@@ -142,3 +142,12 @@ a.payer {
     text-decoration: none;
     margin-right: 10px;
 }
+
+button.recu {
+    padding: 10px 18px;
+    background: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}

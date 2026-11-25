@@ -34,6 +34,26 @@ export class ReservationDetailComponent implements OnInit {
         });
     }
 
+    telechargerRecu(): void {
+        if (!this.booking) {
+            return;
+        }
+
+        this.bookingService.downloadReceipt(this.booking.id).subscribe({
+            next: (fichier) => {
+                const url = window.URL.createObjectURL(fichier);
+                const lien = document.createElement('a');
+                lien.href = url;
+                lien.download = 'recu-' + this.booking!.reference + '.pdf';
+                lien.click();
+                window.URL.revokeObjectURL(url);
+            },
+            error: () => {
+                this.erreur = 'Impossible de télécharger le reçu.';
+            }
+        });
+    }
+
     annuler(): void {
         if (!this.booking) {
             return;
