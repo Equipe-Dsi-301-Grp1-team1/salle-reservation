@@ -1,0 +1,30 @@
+<div class="page">
+    <p><a routerLink="/reservations">← Retour à mes réservations</a></p>
+
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+    <p class="message" *ngIf="message">{{ message }}</p>
+
+    <div class="carte" *ngIf="booking">
+        <h2>Paiement de la réservation</h2>
+        <p class="reference">{{ booking.reference }}</p>
+
+        <div class="recap">
+            <p><strong>Salle :</strong> {{ booking.room.name }}</p>
+            <p><strong>Date :</strong> {{ booking.dateLabel }}</p>
+            <p><strong>Durée :</strong> {{ booking.hours }} heures</p>
+            <p class="montant"><strong>Montant :</strong> {{ booking.amount | number:'1.2-2' }} €</p>
+        </div>
+
+        <p class="info" *ngIf="booking.status !== 'VALIDEE'">
+            Cette réservation n'est pas en attente de paiement (statut : {{ booking.statusLabel }}).
+        </p>
+
+        <button type="button" *ngIf="booking.status === 'VALIDEE'" [disabled]="chargement" (click)="payer()">
+            {{ chargement ? 'Traitement...' : 'Payer maintenant' }}
+        </button>
+
+        <p class="note" *ngIf="booking.status === 'VALIDEE'">
+            Vous serez redirigé vers Stripe. En mode démonstration, le paiement est simulé.
+        </p>
+    </div>
+</div>

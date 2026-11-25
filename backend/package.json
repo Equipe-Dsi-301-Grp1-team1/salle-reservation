@@ -16,7 +16,8 @@
     "express-session": "^1.19.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.12.1",
-    "node-cron": "^4.6.0"
+    "node-cron": "^4.6.0",
+    "stripe": "^23.2.0"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

@@ -16,8 +16,15 @@ export class ReservationDetailComponent implements OnInit {
 
     booking: ClientBooking | null = null;
     erreur = '';
+    message = '';
+    paiementSucces = false;
 
     ngOnInit(): void {
+        this.paiementSucces = this.route.snapshot.queryParamMap.get('paiement') === 'succes';
+        this.charger();
+    }
+
+    charger(): void {
         const id = this.route.snapshot.paramMap.get('id') || '';
         this.bookingService.getOne(id).subscribe({
             next: (booking) => {
@@ -25,6 +32,27 @@ export class ReservationDetailComponent implements OnInit {
             },
             error: (error) => {
                 this.erreur = error.error?.message || 'Réservation introuvable.';
+            }
+        });
+    }
+
+    annuler(): void {
+        if (!this.booking) {
+            return;
+        }
+        if (!window.confirm('Annuler cette réservation ?')) {
+            return;
+        }
+
+        this.erreur = '';
+        this.message = '';
+        this.bookingService.cancelBooking(this.booking.id).subscribe({
+            next: (response) => {
+                this.message = response.message;
+                this.charger();
+            },
+            error: (error) => {
+                this.erreur = error.error?.message || 'Annulation impossible.';
             }
         });
     }

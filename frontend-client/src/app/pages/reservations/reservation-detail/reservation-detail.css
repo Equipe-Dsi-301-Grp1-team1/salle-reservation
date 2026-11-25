@@ -110,3 +110,35 @@ dd {
 .error {
     color: red;
 }
+
+.succes {
+    background: #def7e3;
+    color: #1d6b2f;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.actions {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+button.annuler {
+    padding: 10px 18px;
+    background: #b91c1c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+a.payer {
+    display: inline-block;
+    padding: 10px 18px;
+    background: #2563eb;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-right: 10px;
+}
