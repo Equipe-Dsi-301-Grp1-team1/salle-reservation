@@ -1,0 +1,43 @@
+<div class="panel">
+  <h3>Historique du client</h3>
+
+  <p>
+    <%= history.total %> autre(s) réservation(s) dans vos salles ·
+    Total payé : <%= history.paidTotal.toFixed(2) %> €
+  </p>
+
+  <% if (history.counts.length > 0) { %>
+    <p class="counts">
+      <% history.counts.forEach(function (item) { %>
+        <span class="badge <%= item.status.toLowerCase() %>"><%= item.label %> : <%= item.count %></span>
+      <% }); %>
+    </p>
+  <% } %>
+
+  <% if (history.items.length === 0) { %>
+    <p>Aucune autre réservation pour ce client dans vos salles.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Salle</th>
+          <th>Date</th>
+          <th>Montant</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% history.items.forEach(function (item) { %>
+          <tr>
+            <td><%= item.reference %></td>
+            <td><%= item.room %></td>
+            <td><%= item.dateLabel %></td>
+            <td><%= item.amount.toFixed(2) %> €</td>
+            <td><span class="badge <%= item.statusClass %>"><%= item.statusLabel %></span></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
