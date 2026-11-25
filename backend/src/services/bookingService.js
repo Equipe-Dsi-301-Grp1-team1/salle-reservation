@@ -130,6 +130,9 @@ async function listAgentBookings(agentId, filters) {
   if (options.status && Object.values(STATUS).includes(options.status)) {
     query.status = options.status;
   }
+  if (options.roomId) {
+    query.roomId = options.roomId;
+  }
 
   return Reservation.find(query)
     .populate('clientId', 'name email')
@@ -258,6 +261,17 @@ async function cancelBooking(clientId, bookingId) {
   booking.status = STATUS.ANNULEE;
   booking.cancelledAt = new Date();
   await booking.save();
+
+  const room = booking.roomId;
+  const fullRoom = room && room._id ? await Room.findById(room._id).select('name agentId') : null;
+  const client = await User.findById(clientId).select('name');
+  const agent = fullRoom ? await User.findById(fullRoom.agentId).select('email') : null;
+  await bookingMailer.sendCancelled(
+    agent ? agent.email : null,
+    booking,
+    fullRoom || { name: 'Salle' },
+    client ? client.name : 'Un client'
+  );
 
   return getClientBooking(clientId, booking._id);
 }

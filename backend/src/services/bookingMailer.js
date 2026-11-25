@@ -168,4 +168,29 @@ async function sendExpired(clientEmail, booking, room) {
   }
 }
 
-module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient, sendPaidAgent, sendExpired };
+async function sendCancelled(agentEmail, booking, room, clientName) {
+  if (!agentEmail) {
+    return;
+  }
+
+  const html =
+    '<p>Bonjour,</p>' +
+    '<p>Un client a annulé sa réservation. Le jour est de nouveau libre.</p>' +
+    '<ul>' +
+    '<li>Client : ' + clientName + '</li>' +
+    '<li>Salle : ' + room.name + '</li>' +
+    '<li>Date : ' + formatFrenchDate(booking.date) + '</li>' +
+    '</ul>';
+
+  try {
+    await emailService.sendMail({
+      to: agentEmail,
+      subject: 'Réservation annulée - ' + booking.reference,
+      html: html,
+    });
+  } catch (error) {
+    console.error('E-mail d\'annulation non envoyé :', error.message);
+  }
+}
+
+module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient, sendPaidAgent, sendExpired, sendCancelled };
