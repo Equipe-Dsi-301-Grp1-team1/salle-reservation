@@ -206,6 +206,9 @@ async function rejectBooking(agentId, bookingId, reason) {
   booking.rejectionReason = text;
   await booking.save();
 
+  const clientEmail = booking.clientId && booking.clientId.email ? booking.clientId.email : null;
+  await bookingMailer.sendRejected(clientEmail, booking, booking.roomId);
+
   return getAgentBooking(agentId, booking._id);
 }
 

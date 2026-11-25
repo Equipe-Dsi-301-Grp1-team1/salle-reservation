@@ -63,4 +63,30 @@ async function sendValidated(clientEmail, booking, room) {
   }
 }
 
-module.exports = { sendNewRequest, sendValidated };
+async function sendRejected(clientEmail, booking, room) {
+  if (!clientEmail) {
+    return;
+  }
+
+  const html =
+    '<p>Bonjour,</p>' +
+    '<p>Votre demande de réservation a été <strong>refusée</strong>.</p>' +
+    '<ul>' +
+    '<li>Salle : ' + room.name + '</li>' +
+    '<li>Date : ' + formatFrenchDate(booking.date) + '</li>' +
+    '<li>Motif : ' + booking.rejectionReason + '</li>' +
+    '</ul>' +
+    '<p>Vous pouvez chercher une autre salle ou une autre date.</p>';
+
+  try {
+    await emailService.sendMail({
+      to: clientEmail,
+      subject: 'Demande refusée - ' + booking.reference,
+      html: html,
+    });
+  } catch (error) {
+    console.error('E-mail de refus non envoyé :', error.message);
+  }
+}
+
+module.exports = { sendNewRequest, sendValidated, sendRejected };
