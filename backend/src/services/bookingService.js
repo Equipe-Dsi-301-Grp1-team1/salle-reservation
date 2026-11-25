@@ -171,6 +171,25 @@ async function validateBooking(agentId, bookingId) {
   return getAgentBooking(agentId, booking._id);
 }
 
+async function rejectBooking(agentId, bookingId, reason) {
+  const booking = await getAgentBooking(agentId, bookingId);
+
+  if (booking.status !== STATUS.EN_ATTENTE) {
+    throw makeError(409, 'Cette demande a déjà été traitée.');
+  }
+
+  const text = String(reason || '').trim();
+  if (!text) {
+    throw makeError(400, 'Le motif du refus est obligatoire.');
+  }
+
+  booking.status = STATUS.REFUSEE;
+  booking.rejectionReason = text;
+  await booking.save();
+
+  return getAgentBooking(agentId, booking._id);
+}
+
 module.exports = {
   getRoomInfo,
   createBooking,
@@ -178,6 +197,7 @@ module.exports = {
   listAgentBookings,
   getAgentBooking,
   validateBooking,
+  rejectBooking,
   makeError,
 };
 

@@ -6,4 +6,6 @@
     <input type="hidden" name="agentId" value="<%= agentId %>">
     <button type="submit" class="primary">Valider la demande</button>
   </form>
+
+  <%- include('_reject-modal', { booking: booking, agentId: agentId }) %>
 </div>

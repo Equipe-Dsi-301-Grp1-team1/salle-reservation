@@ -48,4 +48,14 @@ async function validateRequest(req, res) {
   }
 }
 
-module.exports = { showRequests, showRequest, validateRequest };
+async function rejectRequest(req, res) {
+  const url = '/agent/requests/' + req.params.id + '?agentId=' + req.agentId;
+  try {
+    await bookingService.rejectBooking(req.agentId, req.params.id, req.body.reason);
+    res.redirect(url + '&message=' + encodeURIComponent('Demande refusée.'));
+  } catch (error) {
+    res.redirect(url + '&error=' + encodeURIComponent(error.message));
+  }
+}
+
+module.exports = { showRequests, showRequest, validateRequest, rejectRequest };

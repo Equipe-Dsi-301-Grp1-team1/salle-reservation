@@ -4,5 +4,6 @@ const viewController = require('../controllers/agentBookingViewController');
 router.get('/requests', viewController.showRequests);
 router.get('/requests/:id', viewController.showRequest);
 router.post('/requests/:id/validate', viewController.validateRequest);
+router.post('/requests/:id/reject', viewController.rejectRequest);
 
 module.exports = router;

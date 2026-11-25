@@ -1,0 +1,12 @@
+<details class="reject-box">
+  <summary>Refuser la demande</summary>
+
+  <form method="post" action="/agent/requests/<%= booking.id %>/reject?agentId=<%= agentId %>">
+    <input type="hidden" name="agentId" value="<%= agentId %>">
+
+    <label for="reason">Motif du refus (obligatoire)</label>
+    <textarea id="reason" name="reason" rows="3" required></textarea>
+
+    <button type="submit" class="danger">Confirmer le refus</button>
+  </form>
+</details>
