@@ -1,8 +1,11 @@
 const Reservation = require('../models/Reservation');
+const Room = require('../models/Room');
+const { User } = require('../models/User');
 const Payment = require('../models/Payment');
 const { STATUS } = require('../constants/bookingStatus');
 const { getStripe, isDemoMode } = require('../config/stripe');
 const { toPaymentView } = require('../utils/bookingPresenter');
+const bookingMailer = require('./bookingMailer');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -93,6 +96,14 @@ async function markPaid(bookingId, data) {
   await booking.save();
 
   const amount = options.amount !== undefined ? options.amount : booking.amount;
+
+  const room = await Room.findById(booking.roomId);
+  const client = await User.findById(booking.clientId).select('name email');
+  await bookingMailer.sendPaidClient(
+    client ? client.email : null,
+    booking,
+    room || { name: 'Salle' }
+  );
 
   if (options.stripeSessionId) {
     const payment = await Payment.findOne({ stripeSessionId: options.stripeSessionId });

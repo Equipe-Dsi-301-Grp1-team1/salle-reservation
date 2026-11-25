@@ -2,7 +2,7 @@ const emailService = require('./emailService');
 const { formatFrenchDate } = require('../utils/bookingDate');
 
 function euros(value) {
-  return Number(value).toFixed(2) + ' €';
+  return Number(value).toFixed(2).replace('.', ',') + ' €';
 }
 
 async function sendNewRequest(agentEmail, booking, room, clientName) {
@@ -89,4 +89,31 @@ async function sendRejected(clientEmail, booking, room) {
   }
 }
 
-module.exports = { sendNewRequest, sendValidated, sendRejected };
+async function sendPaidClient(clientEmail, booking, room) {
+  if (!clientEmail) {
+    return;
+  }
+
+  const html =
+    '<p>Bonjour,</p>' +
+    '<p>Votre paiement est confirmé. Votre réservation est <strong>payée</strong>.</p>' +
+    '<ul>' +
+    '<li>Référence : ' + booking.reference + '</li>' +
+    '<li>Salle : ' + room.name + '</li>' +
+    '<li>Date : ' + formatFrenchDate(booking.date) + '</li>' +
+    '<li>Montant : ' + euros(booking.amount) + '</li>' +
+    '</ul>' +
+    '<p>Conservez cet e-mail comme preuve de votre réservation.</p>';
+
+  try {
+    await emailService.sendMail({
+      to: clientEmail,
+      subject: 'Paiement confirmé - ' + booking.reference,
+      html: html,
+    });
+  } catch (error) {
+    console.error('E-mail de paiement client non envoyé :', error.message);
+  }
+}
+
+module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient };
