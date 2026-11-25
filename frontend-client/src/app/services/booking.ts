@@ -25,39 +25,13 @@ export interface Booking {
     _id: string;
     reference: string;
     clientId: string;
-    roomId: string | { _id: string; name: string; address?: string };
+    roomId: string;
     date: string;
     hours: number;
     guests: number;
     eventType: string;
     amount: number;
     status: string;
-    rejectionReason?: string;
-    expiresAt?: string;
-}
-
-export interface ClientBooking {
-    id: string;
-    reference: string;
-    room: {
-        id: string;
-        name: string;
-        address: string;
-        pricePerHour: number;
-        photo: string;
-    };
-    date: string;
-    dateLabel: string;
-    hours: number;
-    guests: number;
-    eventType: string;
-    amount: number;
-    status: string;
-    statusLabel: string;
-    statusClass: string;
-    rejectionReason: string;
-    expiresAt: string | null;
-    hoursLeft: number;
 }
 
 @Injectable({
@@ -86,19 +60,5 @@ export class BookingService {
             data,
             { headers: this.headers() }
         );
-    }
-
-    listMine(status?: string): Observable<Booking[]> {
-        let url = `${this.apiUrl}/bookings/me`;
-        if (status) {
-            url += '?status=' + status;
-        }
-        return this.http.get<Booking[]>(url, { headers: this.headers() });
-    }
-
-    getOne(id: string): Observable<ClientBooking> {
-        return this.http.get<ClientBooking>(`${this.apiUrl}/bookings/${id}`, {
-            headers: this.headers()
-        });
     }
 }
