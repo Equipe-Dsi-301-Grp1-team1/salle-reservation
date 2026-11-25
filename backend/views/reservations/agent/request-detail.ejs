@@ -1,0 +1,37 @@
+<%- include('../partials/head', { title: title }) %>
+
+<p><a href="/agent/requests?agentId=<%= agentId %>">← Retour aux demandes</a></p>
+
+<div class="panel">
+  <h2><%= booking.reference %></h2>
+  <p><span class="badge <%= booking.statusClass %>"><%= booking.statusLabel %></span></p>
+
+  <dl>
+    <dt>Client</dt>
+    <dd><%= booking.client %> (<%= booking.clientEmail %>)</dd>
+
+    <dt>Salle</dt>
+    <dd><%= booking.room %></dd>
+
+    <dt>Date de l'événement</dt>
+    <dd><%= booking.dateLabel %></dd>
+
+    <dt>Durée</dt>
+    <dd><%= booking.hours %> heures</dd>
+
+    <dt>Nombre d'invités</dt>
+    <dd><%= booking.guests %></dd>
+
+    <dt>Type d'événement</dt>
+    <dd><%= booking.eventType %></dd>
+
+    <dt>Montant</dt>
+    <dd><%= booking.amount.toFixed(2) %> €</dd>
+  </dl>
+
+  <% if (booking.rejectionReason) { %>
+    <p class="error">Motif du refus : <%= booking.rejectionReason %></p>
+  <% } %>
+</div>
+
+<%- include('../partials/foot') %>
