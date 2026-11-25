@@ -1,0 +1,45 @@
+<%- include('../partials/head', { title: title }) %>
+
+<div class="cards">
+  <% dashboard.counts.forEach(function (item) { %>
+    <div class="card">
+      <span class="number <%= item.status.toLowerCase() %>"><%= item.count %></span>
+      <span class="label"><%= item.label %></span>
+    </div>
+  <% }); %>
+</div>
+
+<div class="panel">
+  <h3>Demandes en attente</h3>
+
+  <% if (dashboard.pending.length === 0) { %>
+    <p>Aucune demande en attente.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Client</th>
+          <th>Salle</th>
+          <th>Date</th>
+          <th>Montant</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% dashboard.pending.forEach(function (booking) { %>
+          <tr>
+            <td><%= booking.reference %></td>
+            <td><%= booking.client %></td>
+            <td><%= booking.room %></td>
+            <td><%= booking.dateLabel %></td>
+            <td><%= booking.amount.toFixed(2) %> €</td>
+            <td><a href="/agent/requests/<%= booking.id %>?agentId=<%= agentId %>">Examiner</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('../partials/foot') %>
