@@ -62,6 +62,21 @@ export interface ClientBooking {
     canCancel: boolean;
 }
 
+export interface RoomReview {
+    id: string;
+    clientName: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+}
+
+export interface RoomReviews {
+    room: string;
+    average: number;
+    count: number;
+    reviews: RoomReview[];
+}
+
 export interface PaymentItem {
     id: string;
     reference: string;
@@ -145,6 +160,10 @@ export class BookingService {
             data,
             { headers: this.headers() }
         );
+    }
+
+    getRoomReviews(roomId: string): Observable<RoomReviews> {
+        return this.http.get<RoomReviews>(`${this.apiUrl}/rooms/${roomId}/reviews`);
     }
 
     listPayments(): Observable<PaymentItem[]> {

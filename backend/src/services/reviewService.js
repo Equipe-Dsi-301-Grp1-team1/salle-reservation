@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const Room = require('../models/Room');
 const { User } = require('../models/User');
@@ -62,4 +63,38 @@ async function createReview(clientId, bookingId, data) {
   return review;
 }
 
-module.exports = { createReview };
+async function listRoomReviews(roomId) {
+  if (!mongoose.isValidObjectId(roomId)) {
+    throw makeError(404, 'Salle introuvable.');
+  }
+
+  const room = await Room.findById(roomId);
+  if (!room) {
+    throw makeError(404, 'Salle introuvable.');
+  }
+
+  const reviews = await Review.find({ roomId: roomId }).sort({ createdAt: -1 });
+
+  let sum = 0;
+  reviews.forEach(function (review) {
+    sum += review.rating;
+  });
+  const average = reviews.length > 0 ? Math.round((sum / reviews.length) * 10) / 10 : 0;
+
+  return {
+    room: room.name,
+    average: average,
+    count: reviews.length,
+    reviews: reviews.map(function (review) {
+      return {
+        id: review._id.toString(),
+        clientName: review.clientName || 'Client',
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt ? review.createdAt.toISOString() : '',
+      };
+    }),
+  };
+}
+
+module.exports = { createReview, listRoomReviews };
