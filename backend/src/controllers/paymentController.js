@@ -29,4 +29,16 @@ async function payDemo(req, res) {
   }
 }
 
-module.exports = { pay, payDemo };
+async function webhook(req, res) {
+  try {
+    const result = await paymentService.handleWebhook(
+      req.rawBody,
+      req.headers['stripe-signature']
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 400).json({ message: error.message });
+  }
+}
+
+module.exports = { pay, payDemo, webhook };

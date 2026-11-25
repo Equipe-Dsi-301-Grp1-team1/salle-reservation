@@ -51,8 +51,8 @@ async function createCheckout(clientId, bookingId) {
       },
     ],
     metadata: { bookingId: booking._id.toString() },
-    success_url: clientUrl() + '/reservations/' + booking._id + '?paiement=succes',
-    cancel_url: clientUrl() + '/reservations/' + booking._id + '/paiement?paiement=echec',
+    success_url: clientUrl() + '/reservations/' + booking._id + '/paiement/succes',
+    cancel_url: clientUrl() + '/reservations/' + booking._id + '/paiement/echec',
   });
 
   await Payment.create({
@@ -117,6 +117,34 @@ async function markPaid(bookingId, data) {
   return booking;
 }
 
+async function handleWebhook(rawBody, signature) {
+  const stripe = getStripe();
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+    throw makeError(503, 'Le paiement Stripe n\'est pas configuré.');
+  }
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (error) {
+    throw makeError(400, 'Signature Stripe invalide.');
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const bookingId = session.metadata ? session.metadata.bookingId : null;
+    if (bookingId) {
+      await markPaid(bookingId, {
+        stripeSessionId: session.id,
+        stripeEventId: event.id,
+        amount: session.amount_total ? session.amount_total / 100 : undefined,
+      });
+    }
+  }
+
+  return { received: true };
+}
+
 async function confirmDemoPayment(clientId, bookingId) {
   if (!isDemoMode()) {
     throw makeError(403, 'Le paiement de démonstration est désactivé.');
@@ -133,4 +161,4 @@ async function confirmDemoPayment(clientId, bookingId) {
   });
 }
 
-module.exports = { createCheckout, markPaid, confirmDemoPayment, makeError };
+module.exports = { createCheckout, markPaid, handleWebhook, confirmDemoPayment, makeError };

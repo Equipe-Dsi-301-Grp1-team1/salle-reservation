@@ -17,10 +17,8 @@ export class ReservationDetailComponent implements OnInit {
     booking: ClientBooking | null = null;
     erreur = '';
     message = '';
-    paiementSucces = false;
 
     ngOnInit(): void {
-        this.paiementSucces = this.route.snapshot.queryParamMap.get('paiement') === 'succes';
         this.charger();
     }
 

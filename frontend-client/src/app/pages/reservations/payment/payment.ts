@@ -65,9 +65,7 @@ export class PaymentPageComponent implements OnInit {
             next: (response) => {
                 this.chargement = false;
                 this.message = response.message;
-                this.router.navigate(['/reservations', this.booking!.id], {
-                    queryParams: { paiement: 'succes' }
-                });
+                this.router.navigate(['/reservations', this.booking!.id, 'paiement', 'succes']);
             },
             error: (error) => {
                 this.chargement = false;
