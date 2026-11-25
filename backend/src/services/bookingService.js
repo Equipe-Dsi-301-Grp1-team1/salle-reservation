@@ -2,14 +2,20 @@ const mongoose = require('mongoose');
 const Room = require('../models/Room');
 const Creneau = require('../models/Creneau');
 const Reservation = require('../models/Reservation');
+const { User } = require('../models/User');
 const {
   STATUS,
   ACTIVE_STATUSES,
   MIN_HOURS,
   MAX_HOURS,
   EVENT_TYPES,
+  STATUS_LABELS,
+  PAYMENT_DEADLINE_HOURS,
+  CANCELLATION_MIN_DAYS,
 } = require('../constants/bookingStatus');
-const { toDay, today, makeReference } = require('../utils/bookingDate');
+const { toDay, today, daysBetween, makeReference } = require('../utils/bookingDate');
+const { toView } = require('../utils/bookingPresenter');
+const bookingMailer = require('./bookingMailer');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -84,7 +90,7 @@ async function createBooking(clientId, data) {
 
   const amount = Math.round(room.pricePerHour * hours * 100) / 100;
 
-  return Reservation.create({
+  const booking = await Reservation.create({
     reference: makeReference(),
     clientId: clientId,
     roomId: room._id,
@@ -96,6 +102,17 @@ async function createBooking(clientId, data) {
     status: STATUS.EN_ATTENTE,
     creneaux: [creneau._id],
   });
+
+  const agent = await User.findById(room.agentId).select('email name');
+  const client = await User.findById(clientId).select('name');
+  await bookingMailer.sendNewRequest(
+    agent ? agent.email : null,
+    booking,
+    room,
+    client ? client.name : 'Un client'
+  );
+
+  return booking;
 }
 
 async function getAgentRooms(agentId) {
@@ -113,6 +130,9 @@ async function listAgentBookings(agentId, filters) {
   if (options.status && Object.values(STATUS).includes(options.status)) {
     query.status = options.status;
   }
+  if (options.roomId) {
+    query.roomId = options.roomId;
+  }
 
   return Reservation.find(query)
     .populate('clientId', 'name email')
@@ -120,5 +140,183 @@ async function listAgentBookings(agentId, filters) {
     .sort({ createdAt: -1 });
 }
 
-module.exports = { getRoomInfo, createBooking, getAgentRooms, listAgentBookings, makeError };
+async function getAgentBooking(agentId, bookingId) {
+  if (!mongoose.isValidObjectId(bookingId)) {
+    throw makeError(404, 'Demande introuvable.');
+  }
+
+  const booking = await Reservation.findById(bookingId)
+    .populate('clientId', 'name email')
+    .populate('roomId', 'name address pricePerHour agentId');
+
+  if (!booking || !booking.roomId || booking.roomId.agentId.toString() !== agentId.toString()) {
+    throw makeError(404, 'Demande introuvable.');
+  }
+
+  return booking;
+}
+
+async function validateBooking(agentId, bookingId) {
+  const booking = await getAgentBooking(agentId, bookingId);
+
+  if (booking.status !== STATUS.EN_ATTENTE) {
+    throw makeError(409, 'Cette demande a déjà été traitée.');
+  }
+
+  const roomId = booking.roomId._id;
+  let creneau = await Creneau.findOneAndUpdate(
+    { _id: { $in: booking.creneaux }, status: 'DISPONIBLE' },
+    { status: 'RESERVE', reservationId: booking._id },
+    { returnDocument: 'after' }
+  );
+
+  if (!creneau) {
+    creneau = await Creneau.findOneAndUpdate(
+      { roomId: roomId, date: booking.date, status: 'DISPONIBLE' },
+      { status: 'RESERVE', reservationId: booking._id },
+      { returnDocument: 'after' }
+    );
+  }
+
+  if (!creneau) {
+    throw makeError(409, 'Ce jour est déjà réservé.');
+  }
+
+  booking.status = STATUS.VALIDEE;
+  booking.validatedAt = new Date();
+  booking.expiresAt = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
+  await booking.save();
+
+  const clientEmail = booking.clientId && booking.clientId.email ? booking.clientId.email : null;
+  await bookingMailer.sendValidated(clientEmail, booking, booking.roomId);
+
+  return getAgentBooking(agentId, booking._id);
+}
+
+async function rejectBooking(agentId, bookingId, reason) {
+  const booking = await getAgentBooking(agentId, bookingId);
+
+  if (booking.status !== STATUS.EN_ATTENTE) {
+    throw makeError(409, 'Cette demande a déjà été traitée.');
+  }
+
+  const text = String(reason || '').trim();
+  if (!text) {
+    throw makeError(400, 'Le motif du refus est obligatoire.');
+  }
+
+  booking.status = STATUS.REFUSEE;
+  booking.rejectionReason = text;
+  await booking.save();
+
+  const clientEmail = booking.clientId && booking.clientId.email ? booking.clientId.email : null;
+  await bookingMailer.sendRejected(clientEmail, booking, booking.roomId);
+
+  return getAgentBooking(agentId, booking._id);
+}
+
+async function listClientBookings(clientId, status) {
+  const query = { clientId: clientId };
+  if (status && Object.values(STATUS).includes(status)) {
+    query.status = status;
+  }
+
+  return Reservation.find(query)
+    .populate('roomId', 'name address photos')
+    .sort({ createdAt: -1 });
+}
+
+async function getClientBooking(clientId, bookingId) {
+  if (!mongoose.isValidObjectId(bookingId)) {
+    throw makeError(404, 'Réservation introuvable.');
+  }
+
+  const booking = await Reservation.findOne({ _id: bookingId, clientId: clientId })
+    .populate('roomId', 'name address pricePerHour photos');
+
+  if (!booking) {
+    throw makeError(404, 'Réservation introuvable.');
+  }
+
+  return booking;
+}
+
+async function cancelBooking(clientId, bookingId) {
+  const booking = await getClientBooking(clientId, bookingId);
+
+  if (![STATUS.EN_ATTENTE, STATUS.VALIDEE, STATUS.PAYEE].includes(booking.status)) {
+    throw makeError(409, 'Cette réservation ne peut plus être annulée.');
+  }
+
+  const daysLeft = daysBetween(today(), booking.date);
+  if (daysLeft <= CANCELLATION_MIN_DAYS) {
+    throw makeError(409, 'Annulation impossible : la date est dans moins de 7 jours.');
+  }
+
+  await Creneau.updateMany(
+    { reservationId: booking._id },
+    { status: 'DISPONIBLE', reservationId: null }
+  );
+
+  booking.status = STATUS.ANNULEE;
+  booking.cancelledAt = new Date();
+  await booking.save();
+
+  return getClientBooking(clientId, booking._id);
+}
+
+async function getClientHistory(agentId, clientId, currentBookingId) {
+  const rooms = await getAgentRooms(agentId);
+  const roomIds = rooms.map(function (room) {
+    return room._id;
+  });
+
+  const bookings = await Reservation.find({
+    clientId: clientId,
+    roomId: { $in: roomIds },
+    _id: { $ne: currentBookingId },
+  })
+    .populate('roomId', 'name')
+    .sort({ date: -1 });
+
+  const byStatus = {};
+  let paidTotal = 0;
+
+  bookings.forEach(function (booking) {
+    byStatus[booking.status] = (byStatus[booking.status] || 0) + 1;
+    if (booking.status === STATUS.PAYEE || booking.status === STATUS.TERMINEE) {
+      paidTotal += booking.amount;
+    }
+  });
+
+  const counts = Object.keys(byStatus).map(function (status) {
+    return {
+      status: status,
+      label: STATUS_LABELS[status] || status,
+      count: byStatus[status],
+    };
+  });
+
+  return {
+    total: bookings.length,
+    counts: counts,
+    paidTotal: Math.round(paidTotal * 100) / 100,
+    items: bookings.slice(0, 10).map(toView),
+  };
+}
+
+module.exports = {
+  getRoomInfo,
+  createBooking,
+  getAgentRooms,
+  listAgentBookings,
+  getAgentBooking,
+  listClientBookings,
+  getClientBooking,
+  getClientHistory,
+  validateBooking,
+  rejectBooking,
+  cancelBooking,
+  makeError,
+};
 

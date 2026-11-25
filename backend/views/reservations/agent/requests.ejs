@@ -1,11 +1,24 @@
 <%- include('../partials/head', { title: title }) %>
 
 <div class="chips">
-  <a class="chip <%= currentStatus === '' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>">Toutes</a>
-  <a class="chip <%= currentStatus === 'EN_ATTENTE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=EN_ATTENTE">En attente</a>
-  <a class="chip <%= currentStatus === 'VALIDEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=VALIDEE">Validées</a>
-  <a class="chip <%= currentStatus === 'REFUSEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=REFUSEE">Refusées</a>
+  <a class="chip <%= currentStatus === '' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&roomId=<%= currentRoomId %>">Toutes</a>
+  <a class="chip <%= currentStatus === 'EN_ATTENTE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=EN_ATTENTE&roomId=<%= currentRoomId %>">En attente</a>
+  <a class="chip <%= currentStatus === 'VALIDEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=VALIDEE&roomId=<%= currentRoomId %>">Validées</a>
+  <a class="chip <%= currentStatus === 'REFUSEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=REFUSEE&roomId=<%= currentRoomId %>">Refusées</a>
 </div>
+
+<form class="filters" method="get" action="/agent/requests">
+  <input type="hidden" name="agentId" value="<%= agentId %>">
+  <input type="hidden" name="status" value="<%= currentStatus %>">
+  <label for="roomId">Salle :</label>
+  <select id="roomId" name="roomId">
+    <option value="">Toutes mes salles</option>
+    <% rooms.forEach(function (room) { %>
+      <option value="<%= room._id %>" <%= currentRoomId === room._id.toString() ? 'selected' : '' %>><%= room.name %></option>
+    <% }); %>
+  </select>
+  <button type="submit">Filtrer</button>
+</form>
 
 <% if (bookings.length === 0) { %>
   <p class="empty">Aucune demande pour le moment.</p>
@@ -21,6 +34,7 @@
         <th>Invités</th>
         <th>Montant</th>
         <th>Statut</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -34,6 +48,7 @@
           <td><%= booking.guests %></td>
           <td><%= booking.amount.toFixed(2) %> €</td>
           <td><span class="badge <%= booking.statusClass %>"><%= booking.statusLabel %></span></td>
+          <td><a href="/agent/requests/<%= booking.id %>?agentId=<%= agentId %>">Examiner</a></td>
         </tr>
       <% }); %>
     </tbody>
