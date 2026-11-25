@@ -25,13 +25,15 @@ export interface Booking {
     _id: string;
     reference: string;
     clientId: string;
-    roomId: string;
+    roomId: string | { _id: string; name: string; address?: string };
     date: string;
     hours: number;
     guests: number;
     eventType: string;
     amount: number;
     status: string;
+    rejectionReason?: string;
+    expiresAt?: string;
 }
 
 @Injectable({
@@ -60,5 +62,13 @@ export class BookingService {
             data,
             { headers: this.headers() }
         );
+    }
+
+    listMine(status?: string): Observable<Booking[]> {
+        let url = `${this.apiUrl}/bookings/me`;
+        if (status) {
+            url += '?status=' + status;
+        }
+        return this.http.get<Booking[]>(url, { headers: this.headers() });
     }
 }
