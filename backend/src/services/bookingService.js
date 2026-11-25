@@ -98,4 +98,21 @@ async function createBooking(clientId, data) {
   });
 }
 
-module.exports = { getRoomInfo, createBooking, makeError };
+async function getAgentRooms(agentId) {
+  return Room.find({ agentId: agentId }).sort({ name: 1 });
+}
+
+async function listAgentBookings(agentId) {
+  const rooms = await getAgentRooms(agentId);
+  const roomIds = rooms.map(function (room) {
+    return room._id;
+  });
+
+  return Reservation.find({ roomId: { $in: roomIds } })
+    .populate('clientId', 'name email')
+    .populate('roomId', 'name')
+    .sort({ createdAt: -1 });
+}
+
+module.exports = { getRoomInfo, createBooking, getAgentRooms, listAgentBookings, makeError };
+
