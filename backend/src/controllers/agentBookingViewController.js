@@ -3,7 +3,9 @@ const { toView } = require('../utils/bookingPresenter');
 
 async function showRequests(req, res) {
   try {
-    const bookings = await bookingService.listAgentBookings(req.agentId);
+    const bookings = await bookingService.listAgentBookings(req.agentId, {
+      status: req.query.status,
+    });
     const rooms = await bookingService.getAgentRooms(req.agentId);
 
     res.render('reservations/agent/requests', {
@@ -11,6 +13,7 @@ async function showRequests(req, res) {
       title: 'Demandes de réservation',
       bookings: bookings.map(toView),
       rooms: rooms,
+      currentStatus: req.query.status || '',
       message: req.query.message || null,
       error: req.query.error || null,
     });

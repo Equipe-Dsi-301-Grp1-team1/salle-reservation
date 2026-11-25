@@ -102,13 +102,19 @@ async function getAgentRooms(agentId) {
   return Room.find({ agentId: agentId }).sort({ name: 1 });
 }
 
-async function listAgentBookings(agentId) {
+async function listAgentBookings(agentId, filters) {
+  const options = filters || {};
   const rooms = await getAgentRooms(agentId);
   const roomIds = rooms.map(function (room) {
     return room._id;
   });
 
-  return Reservation.find({ roomId: { $in: roomIds } })
+  const query = { roomId: { $in: roomIds } };
+  if (options.status && Object.values(STATUS).includes(options.status)) {
+    query.status = options.status;
+  }
+
+  return Reservation.find(query)
     .populate('clientId', 'name email')
     .populate('roomId', 'name')
     .sort({ createdAt: -1 });

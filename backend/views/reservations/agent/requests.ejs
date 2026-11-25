@@ -1,5 +1,12 @@
 <%- include('../partials/head', { title: title }) %>
 
+<div class="chips">
+  <a class="chip <%= currentStatus === '' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>">Toutes</a>
+  <a class="chip <%= currentStatus === 'EN_ATTENTE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=EN_ATTENTE">En attente</a>
+  <a class="chip <%= currentStatus === 'VALIDEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=VALIDEE">Validées</a>
+  <a class="chip <%= currentStatus === 'REFUSEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=REFUSEE">Refusées</a>
+</div>
+
 <% if (bookings.length === 0) { %>
   <p class="empty">Aucune demande pour le moment.</p>
 <% } else { %>

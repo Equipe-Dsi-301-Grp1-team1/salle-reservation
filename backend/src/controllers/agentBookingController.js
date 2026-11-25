@@ -3,7 +3,9 @@ const { toView } = require('../utils/bookingPresenter');
 
 async function list(req, res) {
   try {
-    const bookings = await bookingService.listAgentBookings(req.user.id);
+    const bookings = await bookingService.listAgentBookings(req.user.id, {
+      status: req.query.status,
+    });
     res.json(bookings.map(toView));
   } catch (error) {
     res.status(error.status || 500).json({ message: error.message });
