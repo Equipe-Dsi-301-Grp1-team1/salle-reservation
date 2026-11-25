@@ -201,6 +201,21 @@ async function listClientBookings(clientId, status) {
     .sort({ createdAt: -1 });
 }
 
+async function getClientBooking(clientId, bookingId) {
+  if (!mongoose.isValidObjectId(bookingId)) {
+    throw makeError(404, 'Réservation introuvable.');
+  }
+
+  const booking = await Reservation.findOne({ _id: bookingId, clientId: clientId })
+    .populate('roomId', 'name address pricePerHour photos');
+
+  if (!booking) {
+    throw makeError(404, 'Réservation introuvable.');
+  }
+
+  return booking;
+}
+
 module.exports = {
   getRoomInfo,
   createBooking,
@@ -208,6 +223,7 @@ module.exports = {
   listAgentBookings,
   getAgentBooking,
   listClientBookings,
+  getClientBooking,
   validateBooking,
   rejectBooking,
   makeError,

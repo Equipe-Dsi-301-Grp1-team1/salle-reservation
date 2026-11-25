@@ -36,6 +36,30 @@ export interface Booking {
     expiresAt?: string;
 }
 
+export interface ClientBooking {
+    id: string;
+    reference: string;
+    room: {
+        id: string;
+        name: string;
+        address: string;
+        pricePerHour: number;
+        photo: string;
+    };
+    date: string;
+    dateLabel: string;
+    hours: number;
+    guests: number;
+    eventType: string;
+    amount: number;
+    status: string;
+    statusLabel: string;
+    statusClass: string;
+    rejectionReason: string;
+    expiresAt: string | null;
+    hoursLeft: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -70,5 +94,11 @@ export class BookingService {
             url += '?status=' + status;
         }
         return this.http.get<Booking[]>(url, { headers: this.headers() });
+    }
+
+    getOne(id: string): Observable<ClientBooking> {
+        return this.http.get<ClientBooking>(`${this.apiUrl}/bookings/${id}`, {
+            headers: this.headers()
+        });
     }
 }
