@@ -143,4 +143,29 @@ async function sendPaidAgent(agentEmail, booking, room, clientName) {
   }
 }
 
-module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient, sendPaidAgent };
+async function sendExpired(clientEmail, booking, room) {
+  if (!clientEmail) {
+    return;
+  }
+
+  const html =
+    '<p>Bonjour,</p>' +
+    '<p>Votre réservation a <strong>expiré</strong> : elle n\'a pas été payée dans les 48 heures.</p>' +
+    '<ul>' +
+    '<li>Salle : ' + room.name + '</li>' +
+    '<li>Date : ' + formatFrenchDate(booking.date) + '</li>' +
+    '</ul>' +
+    '<p>Le jour est de nouveau disponible pour d\'autres clients.</p>';
+
+  try {
+    await emailService.sendMail({
+      to: clientEmail,
+      subject: 'Réservation expirée - ' + booking.reference,
+      html: html,
+    });
+  } catch (error) {
+    console.error('E-mail d\'expiration non envoyé :', error.message);
+  }
+}
+
+module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient, sendPaidAgent, sendExpired };
