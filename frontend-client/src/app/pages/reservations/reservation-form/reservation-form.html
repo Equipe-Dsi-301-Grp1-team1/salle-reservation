@@ -3,13 +3,24 @@
 
     <p class="error" *ngIf="erreur">{{ erreur }}</p>
 
-    <div *ngIf="room">
+    <div class="success" *ngIf="message">
+        <p>{{ message }}</p>
+        <p>Référence : <strong>{{ reference }}</strong></p>
+        <p>Votre demande est en attente de la réponse de l'agent.</p>
+        <a routerLink="/reservations">Voir mes réservations</a>
+    </div>
+
+    <div *ngIf="room && !message">
         <p class="room-name">{{ room.name }}</p>
         <p class="room-info">{{ room.address }} · {{ room.capacity }} personnes</p>
         <p class="room-price">{{ room.pricePerHour }} € par heure</p>
-        <p class="chosen-date" *ngIf="date">Date choisie : {{ date }}</p>
 
-        <form>
+        <form (ngSubmit)="envoyer()">
+            <div>
+                <label for="date">Date de l'événement</label>
+                <input id="date" name="date" type="date" [(ngModel)]="date" required>
+            </div>
+
             <div>
                 <label for="hours">Nombre d'heures</label>
                 <select id="hours" name="hours" [(ngModel)]="hours">
@@ -17,10 +28,27 @@
                 </select>
             </div>
 
+            <div>
+                <label for="guests">Nombre d'invités</label>
+                <input id="guests" name="guests" type="number" min="1" [max]="room.capacity" [(ngModel)]="guests" required>
+            </div>
+
+            <div>
+                <label for="eventType">Type d'événement</label>
+                <select id="eventType" name="eventType" [(ngModel)]="eventType" required>
+                    <option value="">Choisir...</option>
+                    <option *ngFor="let type of typesEvenement" [value]="type">{{ type }}</option>
+                </select>
+            </div>
+
             <div class="total">
                 <span>Total à payer</span>
                 <strong>{{ totalAffiche }}</strong>
             </div>
+
+            <button type="submit" [disabled]="envoi">
+                {{ envoi ? 'Envoi...' : 'Envoyer la demande' }}
+            </button>
         </form>
     </div>
 

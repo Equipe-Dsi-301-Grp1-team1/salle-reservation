@@ -13,6 +13,27 @@ export interface RoomInfo {
     photos: string[];
 }
 
+export interface BookingRequest {
+    roomId: string;
+    date: string;
+    hours: number;
+    guests: number;
+    eventType: string;
+}
+
+export interface Booking {
+    _id: string;
+    reference: string;
+    clientId: string;
+    roomId: string;
+    date: string;
+    hours: number;
+    guests: number;
+    eventType: string;
+    amount: number;
+    status: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -31,5 +52,13 @@ export class BookingService {
 
     getRoomInfo(roomId: string): Observable<RoomInfo> {
         return this.http.get<RoomInfo>(`${this.apiUrl}/bookings/room/${roomId}`);
+    }
+
+    createBooking(data: BookingRequest): Observable<{ message: string; booking: Booking }> {
+        return this.http.post<{ message: string; booking: Booking }>(
+            `${this.apiUrl}/bookings`,
+            data,
+            { headers: this.headers() }
+        );
     }
 }
