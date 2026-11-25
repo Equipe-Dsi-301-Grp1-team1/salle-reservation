@@ -105,6 +105,14 @@ async function markPaid(bookingId, data) {
     room || { name: 'Salle' }
   );
 
+  const agent = room ? await User.findById(room.agentId).select('email') : null;
+  await bookingMailer.sendPaidAgent(
+    agent ? agent.email : null,
+    booking,
+    room || { name: 'Salle' },
+    client ? client.name : 'Un client'
+  );
+
   if (options.stripeSessionId) {
     const payment = await Payment.findOne({ stripeSessionId: options.stripeSessionId });
     if (payment) {

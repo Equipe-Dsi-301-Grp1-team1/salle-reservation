@@ -116,4 +116,31 @@ async function sendPaidClient(clientEmail, booking, room) {
   }
 }
 
-module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient };
+async function sendPaidAgent(agentEmail, booking, room, clientName) {
+  if (!agentEmail) {
+    return;
+  }
+
+  const html =
+    '<p>Bonjour,</p>' +
+    '<p>Un client vient de payer sa réservation.</p>' +
+    '<ul>' +
+    '<li>Client : ' + clientName + '</li>' +
+    '<li>Référence : ' + booking.reference + '</li>' +
+    '<li>Salle : ' + room.name + '</li>' +
+    '<li>Date : ' + formatFrenchDate(booking.date) + '</li>' +
+    '<li>Montant : ' + euros(booking.amount) + '</li>' +
+    '</ul>';
+
+  try {
+    await emailService.sendMail({
+      to: agentEmail,
+      subject: 'Paiement reçu - ' + booking.reference,
+      html: html,
+    });
+  } catch (error) {
+    console.error('E-mail de paiement agent non envoyé :', error.message);
+  }
+}
+
+module.exports = { sendNewRequest, sendValidated, sendRejected, sendPaidClient, sendPaidAgent };
