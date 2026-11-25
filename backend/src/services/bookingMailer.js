@@ -33,4 +33,34 @@ async function sendNewRequest(agentEmail, booking, room, clientName) {
   }
 }
 
-module.exports = { sendNewRequest };
+async function sendValidated(clientEmail, booking, room) {
+  if (!clientEmail) {
+    return;
+  }
+
+  const paiement = (process.env.CLIENT_URL || 'http://localhost:4200') +
+    '/reservations/' + booking._id + '/paiement';
+
+  const html =
+    '<p>Bonjour,</p>' +
+    '<p>Votre demande de réservation est <strong>validée</strong>.</p>' +
+    '<ul>' +
+    '<li>Salle : ' + room.name + '</li>' +
+    '<li>Date : ' + formatFrenchDate(booking.date) + '</li>' +
+    '<li>Montant : ' + euros(booking.amount) + '</li>' +
+    '</ul>' +
+    '<p>Vous avez 48 heures pour payer, sinon le jour sera de nouveau libre.</p>' +
+    '<p><a href="' + paiement + '">Payer ma réservation</a></p>';
+
+  try {
+    await emailService.sendMail({
+      to: clientEmail,
+      subject: 'Demande validée - ' + booking.reference,
+      html: html,
+    });
+  } catch (error) {
+    console.error('E-mail de validation non envoyé :', error.message);
+  }
+}
+
+module.exports = { sendNewRequest, sendValidated };

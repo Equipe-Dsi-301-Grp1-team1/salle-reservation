@@ -184,6 +184,9 @@ async function validateBooking(agentId, bookingId) {
   booking.expiresAt = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
   await booking.save();
 
+  const clientEmail = booking.clientId && booking.clientId.email ? booking.clientId.email : null;
+  await bookingMailer.sendValidated(clientEmail, booking, booking.roomId);
+
   return getAgentBooking(agentId, booking._id);
 }
 
