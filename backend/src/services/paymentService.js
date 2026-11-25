@@ -2,6 +2,7 @@ const Reservation = require('../models/Reservation');
 const Payment = require('../models/Payment');
 const { STATUS } = require('../constants/bookingStatus');
 const { getStripe, isDemoMode } = require('../config/stripe');
+const { toPaymentView } = require('../utils/bookingPresenter');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -161,4 +162,16 @@ async function confirmDemoPayment(clientId, bookingId) {
   });
 }
 
-module.exports = { createCheckout, markPaid, handleWebhook, confirmDemoPayment, makeError };
+async function listClientPayments(clientId) {
+  const payments = await Payment.find({ clientId: clientId, status: 'REUSSIE' })
+    .populate({
+      path: 'bookingId',
+      select: 'reference date amount roomId',
+      populate: { path: 'roomId', select: 'name' },
+    })
+    .sort({ paidAt: -1 });
+
+  return payments.map(toPaymentView);
+}
+
+module.exports = { createCheckout, markPaid, handleWebhook, confirmDemoPayment, listClientPayments, makeError };

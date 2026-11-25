@@ -41,4 +41,13 @@ async function webhook(req, res) {
   }
 }
 
-module.exports = { pay, payDemo, webhook };
+async function history(req, res) {
+  try {
+    const payments = await paymentService.listClientPayments(req.user.id);
+    res.json(payments);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+}
+
+module.exports = { pay, payDemo, webhook, history };

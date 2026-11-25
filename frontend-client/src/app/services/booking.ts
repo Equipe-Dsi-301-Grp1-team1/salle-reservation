@@ -62,6 +62,17 @@ export interface ClientBooking {
     canCancel: boolean;
 }
 
+export interface PaymentItem {
+    id: string;
+    reference: string;
+    room: string;
+    date: string;
+    dateLabel: string;
+    amount: number;
+    paidAt: string;
+    status: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -126,5 +137,11 @@ export class BookingService {
             {},
             { headers: this.headers() }
         );
+    }
+
+    listPayments(): Observable<PaymentItem[]> {
+        return this.http.get<PaymentItem[]>(`${this.apiUrl}/payments/me`, {
+            headers: this.headers()
+        });
     }
 }
