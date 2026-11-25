@@ -139,6 +139,14 @@ export class BookingService {
         );
     }
 
+    createReview(id: string, data: { rating: number; comment: string }): Observable<{ message: string }> {
+        return this.http.post<{ message: string }>(
+            `${this.apiUrl}/bookings/${id}/review`,
+            data,
+            { headers: this.headers() }
+        );
+    }
+
     listPayments(): Observable<PaymentItem[]> {
         return this.http.get<PaymentItem[]>(`${this.apiUrl}/payments/me`, {
             headers: this.headers()
