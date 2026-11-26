@@ -2,7 +2,7 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-
+const authRoutes = require('../routes/authRoutes');
 const app = express();
 
 const creneauRoutes = require('./routes/creneauRoutes');
@@ -14,6 +14,7 @@ const { agentOnly } = require('./middlewares/identify');
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/api/auth', authRoutes);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));

@@ -1,6 +1,5 @@
-
-import { Component, signal } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +7,4 @@ import { RouterOutlet, RouterLink } from '@angular/router';
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
-export class App {
-  protected readonly title = signal('salle-client');
-}
+export class App { }

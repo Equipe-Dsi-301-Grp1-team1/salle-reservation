@@ -7,38 +7,38 @@ import { Home } from './pages/home/home';
 import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
-    {
-        path: 'register',
-        component: Register
-    },
-    {
-        path: 'login',
-        component: Login
-    },
-    {
-        path: 'home',
-        component: Home,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'agent/rooms',
-        component: AgentRoomListComponent
-    },
-    {
-        path: 'agent/rooms/new',
-        component: AgentRoomFormComponent
-    },
-    {
-        path: 'agent/rooms/edit/:id',
-        component: AgentRoomFormComponent
-    },
-    {
-        path: '',
-        redirectTo: 'login',
-        pathMatch: 'full'
-    },
-    {
-        path: '**',
-        redirectTo: 'login'
-    }
+  {
+    path: 'register',
+    component: Register
+  },
+  {
+    path: 'login',
+    component: Login
+  },
+  {
+    path: 'home',
+    component: Home,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agent/rooms',
+    component: AgentRoomListComponent
+  },
+  {
+    path: 'agent/rooms/new',
+    component: AgentRoomFormComponent
+  },
+  {
+    path: 'agent/rooms/edit/:id',
+    component: AgentRoomFormComponent
+  },
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: 'login'
+  }
 ];
