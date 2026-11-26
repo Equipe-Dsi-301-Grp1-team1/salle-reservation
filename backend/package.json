@@ -8,6 +8,7 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules MONGOMS_VERSION=7.0.14 jest"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "ejs": "^7.0.2",
