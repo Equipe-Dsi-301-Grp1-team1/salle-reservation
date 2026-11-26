@@ -8,11 +8,11 @@ const User = model('User', new Schema({
 }, baseOptions));
 
 const Client = User.discriminator('client', new Schema({
-  address: { type: String, required: true },
+  address: { type: String, default: '' },
 }));
 
 const Agent = User.discriminator('agent', new Schema({
-  phoneNumber: { type: String, required: true },
+  phoneNumber: { type: String, default: '' },
 }));
 
 module.exports = { User, Client, Agent };

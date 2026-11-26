@@ -1,15 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
+
 @Component({
     selector: 'app-register',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, RouterLink],
     templateUrl: './register.html',
     styleUrl: './register.css'
 })
 export class Register {
+    private authService = inject(AuthService);
+
     nom = '';
     email = '';
     password = '';
@@ -17,23 +21,28 @@ export class Register {
     message = '';
     errorMessage = '';
     loading = false;
-    constructor(private authService: AuthService) { }
+
     register(): void {
         this.message = '';
         this.errorMessage = '';
+
         if (!this.nom.trim() || !this.email.trim() || !this.password || !this.confirmPassword) {
             this.errorMessage = 'Tous les champs sont obligatoires';
             return;
         }
+
         if (this.password.length < 8) {
-            this.errorMessage = 'Le mot de passe doit contenir au moins 8 caracteres';
+            this.errorMessage = 'Le mot de passe doit contenir au moins 8 caractères';
             return;
         }
+
         if (this.password !== this.confirmPassword) {
             this.errorMessage = 'Les mots de passe ne correspondent pas';
             return;
         }
+
         this.loading = true;
+
         this.authService.register({
             nom: this.nom.trim(),
             email: this.email.trim(),

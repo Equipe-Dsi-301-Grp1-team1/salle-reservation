@@ -1,0 +1,61 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Mes salles</h2>
+      <p class="page-subtitle">Gérez votre catalogue d'espaces et leurs équipements</p>
+    </div>
+    <a routerLink="/agent/rooms/new" class="btn btn-primary">+ Ajouter une salle</a>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+  <div *ngIf="loading" class="page-subtitle">Chargement de vos salles en cours...</div>
+
+  <div *ngIf="!loading && rooms.length === 0" class="alert alert-info">
+    Vous n'avez encore créé aucune salle. Cliquez sur <strong>« + Ajouter une salle »</strong> pour commencer.
+  </div>
+
+  <div class="table-wrapper" *ngIf="rooms.length > 0">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Salle</th>
+          <th>Adresse</th>
+          <th>Capacité</th>
+          <th>Tarif</th>
+          <th>Équipements</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let room of rooms">
+          <td>
+            <strong>{{ room.name }}</strong>
+            <div class="page-subtitle" style="font-size: 0.83rem;">
+              {{ room.description | slice:0:55 }}{{ room.description.length > 55 ? '...' : '' }}
+            </div>
+          </td>
+          <td>{{ room.address }}</td>
+          <td>{{ room.capacity }} pers.</td>
+          <td><strong>{{ room.pricePerHour }} €</strong> / h</td>
+          <td>
+            <span *ngIf="room.equipments.length === 0" class="page-subtitle">Aucun</span>
+            <div class="badge-list" *ngIf="room.equipments.length > 0">
+              <span *ngFor="let eq of room.equipments" class="badge-eq">{{ eq }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="actions-cell">
+              <a [routerLink]="['/agent/rooms/edit', room._id]" class="btn btn-sm btn-warning">
+                Modifier
+              </a>
+              <button (click)="onDelete(room)" class="btn btn-sm btn-danger">
+                Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

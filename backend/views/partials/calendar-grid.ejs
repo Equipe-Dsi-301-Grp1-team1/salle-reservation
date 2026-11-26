@@ -1,0 +1,29 @@
+<p>
+  <a href="<%= gridUrl %>?agentId=<%= agentId %>&month=<%= calendar.previousMonth %>&<%= dayParam %>=<%= selectedDate %>">‹ Mois précédent</a>
+  <strong><%= calendar.monthLabel %></strong>
+  <a href="<%= gridUrl %>?agentId=<%= agentId %>&month=<%= calendar.nextMonth %>&<%= dayParam %>=<%= selectedDate %>">Mois suivant ›</a>
+</p>
+<table class="calendar">
+  <tr>
+    <th>L</th><th>M</th><th>M</th><th>J</th><th>V</th><th>S</th><th>D</th>
+  </tr>
+  <% calendar.weeks.forEach(function (week) { %>
+    <tr>
+      <% week.forEach(function (cell) { %>
+        <% if (cell === null) { %>
+          <td></td>
+        <% } else { %>
+          <td class="<%= cell.state %> <%= cell.date === selectedDate ? 'selected' : '' %>">
+            <a href="<%= gridUrl %>?agentId=<%= agentId %>&month=<%= calendar.month %>&<%= dayParam %>=<%= cell.date %>"><%= cell.number %></a>
+          </td>
+        <% } %>
+      <% }) %>
+    </tr>
+  <% }) %>
+</table>
+<p class="legend">
+  <span>Libre : bordure pleine</span>
+  <span>Réservé : gris</span>
+  <span>Bloqué : noir</span>
+  <span>Non ouvert : pointillés</span>
+</p>
