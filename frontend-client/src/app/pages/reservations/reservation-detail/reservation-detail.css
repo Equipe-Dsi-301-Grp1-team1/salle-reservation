@@ -1,0 +1,134 @@
+.page {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.carte {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.entete {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.entete h2 {
+    margin: 0;
+    color: #1e3a8a;
+}
+
+h3 {
+    margin-bottom: 2px;
+}
+
+.adresse {
+    color: #555;
+    margin-top: 0;
+}
+
+dl {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    row-gap: 10px;
+    margin-top: 20px;
+}
+
+dt {
+    font-weight: bold;
+}
+
+dd {
+    margin: 0;
+}
+
+.montant {
+    color: #1e3a8a;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.en_attente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.validee {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.payee {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.refusee {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.expiree {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.annulee {
+    background: #f3e8ff;
+    color: #6b21a8;
+}
+
+.terminee {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.refus {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.delai {
+    background: #eef4ff;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.error {
+    color: red;
+}
+
+.succes {
+    background: #def7e3;
+    color: #1d6b2f;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.actions {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+button.annuler {
+    padding: 10px 18px;
+    background: #b91c1c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
