@@ -2,16 +2,20 @@ const mongoose = require('mongoose');
 const Room = require('../models/Room');
 const Creneau = require('../models/Creneau');
 const Reservation = require('../models/Reservation');
+const { User } = require('../models/User');
 const {
   STATUS,
   ACTIVE_STATUSES,
   MIN_HOURS,
   MAX_HOURS,
   EVENT_TYPES,
+  STATUS_LABELS,
   PAYMENT_DEADLINE_HOURS,
   CANCELLATION_MIN_DAYS,
 } = require('../constants/bookingStatus');
 const { toDay, today, daysBetween, makeReference } = require('../utils/bookingDate');
+const { toView } = require('../utils/bookingPresenter');
+const bookingMailer = require('./bookingMailer');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -86,7 +90,7 @@ async function createBooking(clientId, data) {
 
   const amount = Math.round(room.pricePerHour * hours * 100) / 100;
 
-  return Reservation.create({
+  const booking = await Reservation.create({
     reference: makeReference(),
     clientId: clientId,
     roomId: room._id,
@@ -98,6 +102,17 @@ async function createBooking(clientId, data) {
     status: STATUS.EN_ATTENTE,
     creneaux: [creneau._id],
   });
+
+  const agent = await User.findById(room.agentId).select('email name');
+  const client = await User.findById(clientId).select('name');
+  await bookingMailer.sendNewRequest(
+    agent ? agent.email : null,
+    booking,
+    room,
+    client ? client.name : 'Un client'
+  );
+
+  return booking;
 }
 
 async function getAgentRooms(agentId) {
@@ -114,6 +129,9 @@ async function listAgentBookings(agentId, filters) {
   const query = { roomId: { $in: roomIds } };
   if (options.status && Object.values(STATUS).includes(options.status)) {
     query.status = options.status;
+  }
+  if (options.roomId) {
+    query.roomId = options.roomId;
   }
 
   return Reservation.find(query)
@@ -169,6 +187,9 @@ async function validateBooking(agentId, bookingId) {
   booking.expiresAt = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
   await booking.save();
 
+  const clientEmail = booking.clientId && booking.clientId.email ? booking.clientId.email : null;
+  await bookingMailer.sendValidated(clientEmail, booking, booking.roomId);
+
   return getAgentBooking(agentId, booking._id);
 }
 
@@ -187,6 +208,9 @@ async function rejectBooking(agentId, bookingId, reason) {
   booking.status = STATUS.REFUSEE;
   booking.rejectionReason = text;
   await booking.save();
+
+  const clientEmail = booking.clientId && booking.clientId.email ? booking.clientId.email : null;
+  await bookingMailer.sendRejected(clientEmail, booking, booking.roomId);
 
   return getAgentBooking(agentId, booking._id);
 }
@@ -241,6 +265,46 @@ async function cancelBooking(clientId, bookingId) {
   return getClientBooking(clientId, booking._id);
 }
 
+async function getClientHistory(agentId, clientId, currentBookingId) {
+  const rooms = await getAgentRooms(agentId);
+  const roomIds = rooms.map(function (room) {
+    return room._id;
+  });
+
+  const bookings = await Reservation.find({
+    clientId: clientId,
+    roomId: { $in: roomIds },
+    _id: { $ne: currentBookingId },
+  })
+    .populate('roomId', 'name')
+    .sort({ date: -1 });
+
+  const byStatus = {};
+  let paidTotal = 0;
+
+  bookings.forEach(function (booking) {
+    byStatus[booking.status] = (byStatus[booking.status] || 0) + 1;
+    if (booking.status === STATUS.PAYEE || booking.status === STATUS.TERMINEE) {
+      paidTotal += booking.amount;
+    }
+  });
+
+  const counts = Object.keys(byStatus).map(function (status) {
+    return {
+      status: status,
+      label: STATUS_LABELS[status] || status,
+      count: byStatus[status],
+    };
+  });
+
+  return {
+    total: bookings.length,
+    counts: counts,
+    paidTotal: Math.round(paidTotal * 100) / 100,
+    items: bookings.slice(0, 10).map(toView),
+  };
+}
+
 module.exports = {
   getRoomInfo,
   createBooking,
@@ -249,6 +313,7 @@ module.exports = {
   getAgentBooking,
   listClientBookings,
   getClientBooking,
+  getClientHistory,
   validateBooking,
   rejectBooking,
   cancelBooking,
