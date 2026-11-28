@@ -1,7 +1,10 @@
 <div class="page">
     <div class="entete">
         <h2>Mes réservations</h2>
-        <a routerLink="/home">Retour à l'accueil</a>
+        <span>
+            <a routerLink="/reservations/mes-paiements">Mes paiements</a>
+            <a routerLink="/home">Retour à l'accueil</a>
+        </span>
     </div>
 
     <p class="error" *ngIf="erreur">{{ erreur }}</p>
@@ -32,6 +35,7 @@
                 <th>Invités</th>
                 <th>Montant</th>
                 <th>Statut</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +51,7 @@
                         {{ libelleStatut(booking.status) }}
                     </span>
                 </td>
+                <td><a [routerLink]="['/reservations', booking._id]">Détail</a></td>
             </tr>
         </tbody>
     </table>

@@ -1,0 +1,33 @@
+<div class="page">
+    <div class="entete">
+        <h2>Mes paiements</h2>
+        <a routerLink="/reservations">Mes réservations</a>
+    </div>
+
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+    <p *ngIf="chargement">Chargement...</p>
+    <p class="vide" *ngIf="!chargement && payments.length === 0">
+        Vous n'avez encore effectué aucun paiement.
+    </p>
+
+    <table *ngIf="!chargement && payments.length > 0">
+        <thead>
+            <tr>
+                <th>Référence</th>
+                <th>Salle</th>
+                <th>Date de l'événement</th>
+                <th>Montant</th>
+                <th>Payé le</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let payment of payments">
+                <td>{{ payment.reference }}</td>
+                <td>{{ payment.room }}</td>
+                <td>{{ payment.date | date:'dd/MM/yyyy' }}</td>
+                <td>{{ payment.amount | number:'1.2-2' }} €</td>
+                <td>{{ payment.paidAt | date:'dd/MM/yyyy' }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

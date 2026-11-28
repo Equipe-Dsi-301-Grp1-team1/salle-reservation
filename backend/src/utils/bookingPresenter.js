@@ -67,4 +67,20 @@ function toClientView(booking) {
   };
 }
 
-module.exports = { toView, toClientView };
+function toPaymentView(payment) {
+  const booking = payment.bookingId;
+  const room = booking && booking.roomId ? booking.roomId : null;
+
+  return {
+    id: payment._id.toString(),
+    reference: booking && booking.reference ? booking.reference : 'Réservation supprimée',
+    room: room && room.name ? room.name : 'Salle inconnue',
+    date: booking && booking.date ? dayText(booking.date) : '',
+    dateLabel: booking && booking.date ? formatFrenchDate(booking.date) : '',
+    amount: payment.amount,
+    paidAt: payment.paidAt ? payment.paidAt.toISOString() : '',
+    status: payment.status,
+  };
+}
+
+module.exports = { toView, toClientView, toPaymentView };
