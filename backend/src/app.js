@@ -9,11 +9,18 @@ const creneauRoutes = require('./routes/creneauRoutes');
 const agentRoomRoutes = require('./routes/agentRoomRoutes');
 const agentCreneauViewRoutes = require('./routes/agentCreneauViewRoutes');
 const authRoutes = require('./routes/authRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 const { agentOnly } = require('./middlewares/identify');
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({
+    verify: (req, res, buffer) => {
+        req.rawBody = buffer;
+    }
+}));
 app.use(express.urlencoded({ extended: true }));
+
+app.use(reservationRoutes);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
