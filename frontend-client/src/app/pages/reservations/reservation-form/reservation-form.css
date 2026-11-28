@@ -1,0 +1,77 @@
+.form-container {
+    max-width: 520px;
+    margin: 40px auto;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    color: #1e3a8a;
+    margin-bottom: 25px;
+}
+
+.room-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.room-info {
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.room-price {
+    color: #2563eb;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.chosen-date {
+    background: #eef4ff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f4f6fb;
+    border-radius: 8px;
+    font-size: 18px;
+}
+
+.total strong {
+    color: #1e3a8a;
+    font-size: 22px;
+}
+
+.error {
+    color: red;
+    text-align: center;
+}
+
+.loading {
+    text-align: center;
+    color: #555;
+}
