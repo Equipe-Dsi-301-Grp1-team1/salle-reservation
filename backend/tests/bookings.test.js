@@ -422,3 +422,37 @@ describe('US-29', () => {
     expect(res.body[0].reference).toBe('RES-PAY');
   });
 });
+
+describe('US-30', () => {
+  test('detail de ma reservation', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() + 10 * 60 * 60 * 1000),
+    });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id)
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.statusLabel).toBe('Validée');
+    expect(res.body.room.name).toBe('Salle Carthage');
+  });
+
+  test('reservation d un autre client en 404', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const other = await makeClient('Marc');
+    const booking = await directBooking({ client: other, room });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id)
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(404);
+  });
+});

@@ -32,6 +32,7 @@
                 <th>Invités</th>
                 <th>Montant</th>
                 <th>Statut</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +48,7 @@
                         {{ libelleStatut(booking.status) }}
                     </span>
                 </td>
+                <td><a [routerLink]="['/reservations', booking._id]">Détail</a></td>
             </tr>
         </tbody>
     </table>
