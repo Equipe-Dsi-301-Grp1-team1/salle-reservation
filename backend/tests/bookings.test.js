@@ -151,3 +151,83 @@ describe('US-27', () => {
     expect(res.statusCode).toBe(404);
   });
 });
+
+describe('US-28', () => {
+  test('creation et montant serveur', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    await openDay(room, '2030-01-07');
+    const client = await makeClient();
+
+    const res = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send(bookingBody(room, { amount: 1 }));
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.booking.amount).toBe(90);
+    expect(res.body.booking.status).toBe('EN_ATTENTE');
+  });
+
+  test('le jour reste disponible', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const creneau = await openDay(room, '2030-01-07');
+    const client = await makeClient();
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send(bookingBody(room));
+
+    expect((await Creneau.findById(creneau._id)).status).toBe('DISPONIBLE');
+  });
+
+  test('sans jeton en 401', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+
+    const res = await request(app).post('/api/bookings').send(bookingBody(room));
+
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('un agent en 403', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+
+    const res = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer ' + tokenFor(agent, 'agent'))
+      .send(bookingBody(room));
+
+    expect(res.statusCode).toBe(403);
+  });
+
+  test('jour non ouvert en 409', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+
+    const res = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send(bookingBody(room));
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  test('capacite depassee en 422', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id, { capacity: 10 });
+    await openDay(room, '2030-01-07');
+    const client = await makeClient();
+
+    const res = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send(bookingBody(room, { guests: 11 }));
+
+    expect(res.statusCode).toBe(422);
+  });
+});

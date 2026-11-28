@@ -30,18 +30,12 @@ h2 {
     margin-bottom: 15px;
 }
 
-.chosen-date {
-    background: #eef4ff;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 15px;
-}
-
 label {
     display: block;
     margin-bottom: 5px;
 }
 
+input,
 select {
     width: 100%;
     padding: 10px;
@@ -50,11 +44,14 @@ select {
     border-radius: 5px;
 }
 
+form div {
+    margin-bottom: 15px;
+}
+
 .total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
     padding: 15px;
     background: #f4f6fb;
     border-radius: 8px;
@@ -66,9 +63,40 @@ select {
     font-size: 22px;
 }
 
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
+
 .error {
     color: red;
     text-align: center;
+}
+
+.success {
+    text-align: center;
+    padding: 20px;
+    background: #def7e3;
+    color: #1d6b2f;
+    border-radius: 8px;
+}
+
+.success a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #1d6b2f;
+    font-weight: bold;
 }
 
 .loading {
