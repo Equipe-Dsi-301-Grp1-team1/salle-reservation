@@ -1,0 +1,23 @@
+<div class="avis">
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+
+    <div *ngIf="reviews">
+        <div class="resume">
+            <strong>{{ reviews.average | number:'1.1-1' }} / 5</strong>
+            <span>{{ reviews.count }} avis</span>
+        </div>
+
+        <p class="vide" *ngIf="reviews.count === 0">Aucun avis pour cette salle.</p>
+
+        <div class="liste">
+            <div class="item" *ngFor="let review of reviews.reviews">
+                <div class="ligne">
+                    <span class="nom">{{ review.clientName }}</span>
+                    <span class="etoiles">{{ etoiles(review.rating) }}</span>
+                </div>
+                <p class="commentaire">{{ review.comment }}</p>
+                <p class="date">{{ review.createdAt | date:'dd/MM/yyyy' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
