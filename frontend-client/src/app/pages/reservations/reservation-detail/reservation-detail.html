@@ -1,0 +1,54 @@
+<div class="page">
+    <p><a routerLink="/reservations">← Retour à mes réservations</a></p>
+
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+
+    <div class="carte" *ngIf="booking">
+        <div class="entete">
+            <h2>{{ booking.reference }}</h2>
+            <span class="badge" [ngClass]="booking.statusClass">{{ booking.statusLabel }}</span>
+        </div>
+
+        <h3>{{ booking.room.name }}</h3>
+        <p class="adresse">{{ booking.room.address }}</p>
+
+        <dl>
+            <dt>Date</dt>
+            <dd>{{ booking.dateLabel }}</dd>
+
+            <dt>Durée</dt>
+            <dd>{{ booking.hours }} heures</dd>
+
+            <dt>Invités</dt>
+            <dd>{{ booking.guests }}</dd>
+
+            <dt>Type d'événement</dt>
+            <dd>{{ booking.eventType }}</dd>
+
+            <dt>Montant</dt>
+            <dd class="montant">{{ booking.amount | number:'1.2-2' }} €</dd>
+        </dl>
+
+        <p class="refus" *ngIf="booking.rejectionReason">
+            Motif du refus : {{ booking.rejectionReason }}
+        </p>
+
+        <p class="delai" *ngIf="booking.status === 'VALIDEE'">
+            Il vous reste {{ booking.hoursLeft }} heures pour payer.
+        </p>
+
+        <p class="succes" *ngIf="message">{{ message }}</p>
+
+        <div class="actions" *ngIf="booking.status === 'VALIDEE'">
+            <a class="payer" [routerLink]="['/reservations', booking.id, 'paiement']">Payer maintenant</a>
+        </div>
+
+        <div class="actions" *ngIf="booking.status === 'TERMINEE'">
+            <a class="payer" [routerLink]="['/reservations', booking.id, 'avis']">Laisser un avis</a>
+        </div>
+
+        <div class="actions" *ngIf="booking.canCancel">
+            <button type="button" class="annuler" (click)="annuler()">Annuler la réservation</button>
+        </div>
+    </div>
+</div>
