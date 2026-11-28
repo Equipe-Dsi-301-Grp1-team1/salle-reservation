@@ -8,10 +8,8 @@ const {
   MIN_HOURS,
   MAX_HOURS,
   EVENT_TYPES,
-  PAYMENT_DEADLINE_HOURS,
-  CANCELLATION_MIN_DAYS,
 } = require('../constants/bookingStatus');
-const { toDay, today, daysBetween, makeReference } = require('../utils/bookingDate');
+const { toDay, today, makeReference } = require('../utils/bookingDate');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -104,154 +102,17 @@ async function getAgentRooms(agentId) {
   return Room.find({ agentId: agentId }).sort({ name: 1 });
 }
 
-async function listAgentBookings(agentId, filters) {
-  const options = filters || {};
+async function listAgentBookings(agentId) {
   const rooms = await getAgentRooms(agentId);
   const roomIds = rooms.map(function (room) {
     return room._id;
   });
 
-  const query = { roomId: { $in: roomIds } };
-  if (options.status && Object.values(STATUS).includes(options.status)) {
-    query.status = options.status;
-  }
-
-  return Reservation.find(query)
+  return Reservation.find({ roomId: { $in: roomIds } })
     .populate('clientId', 'name email')
     .populate('roomId', 'name')
     .sort({ createdAt: -1 });
 }
 
-async function getAgentBooking(agentId, bookingId) {
-  if (!mongoose.isValidObjectId(bookingId)) {
-    throw makeError(404, 'Demande introuvable.');
-  }
-
-  const booking = await Reservation.findById(bookingId)
-    .populate('clientId', 'name email')
-    .populate('roomId', 'name address pricePerHour agentId');
-
-  if (!booking || !booking.roomId || booking.roomId.agentId.toString() !== agentId.toString()) {
-    throw makeError(404, 'Demande introuvable.');
-  }
-
-  return booking;
-}
-
-async function validateBooking(agentId, bookingId) {
-  const booking = await getAgentBooking(agentId, bookingId);
-
-  if (booking.status !== STATUS.EN_ATTENTE) {
-    throw makeError(409, 'Cette demande a déjà été traitée.');
-  }
-
-  const roomId = booking.roomId._id;
-  let creneau = await Creneau.findOneAndUpdate(
-    { _id: { $in: booking.creneaux }, status: 'DISPONIBLE' },
-    { status: 'RESERVE', reservationId: booking._id },
-    { returnDocument: 'after' }
-  );
-
-  if (!creneau) {
-    creneau = await Creneau.findOneAndUpdate(
-      { roomId: roomId, date: booking.date, status: 'DISPONIBLE' },
-      { status: 'RESERVE', reservationId: booking._id },
-      { returnDocument: 'after' }
-    );
-  }
-
-  if (!creneau) {
-    throw makeError(409, 'Ce jour est déjà réservé.');
-  }
-
-  booking.status = STATUS.VALIDEE;
-  booking.validatedAt = new Date();
-  booking.expiresAt = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
-  await booking.save();
-
-  return getAgentBooking(agentId, booking._id);
-}
-
-async function rejectBooking(agentId, bookingId, reason) {
-  const booking = await getAgentBooking(agentId, bookingId);
-
-  if (booking.status !== STATUS.EN_ATTENTE) {
-    throw makeError(409, 'Cette demande a déjà été traitée.');
-  }
-
-  const text = String(reason || '').trim();
-  if (!text) {
-    throw makeError(400, 'Le motif du refus est obligatoire.');
-  }
-
-  booking.status = STATUS.REFUSEE;
-  booking.rejectionReason = text;
-  await booking.save();
-
-  return getAgentBooking(agentId, booking._id);
-}
-
-async function listClientBookings(clientId, status) {
-  const query = { clientId: clientId };
-  if (status && Object.values(STATUS).includes(status)) {
-    query.status = status;
-  }
-
-  return Reservation.find(query)
-    .populate('roomId', 'name address photos')
-    .sort({ createdAt: -1 });
-}
-
-async function getClientBooking(clientId, bookingId) {
-  if (!mongoose.isValidObjectId(bookingId)) {
-    throw makeError(404, 'Réservation introuvable.');
-  }
-
-  const booking = await Reservation.findOne({ _id: bookingId, clientId: clientId })
-    .populate('roomId', 'name address pricePerHour photos');
-
-  if (!booking) {
-    throw makeError(404, 'Réservation introuvable.');
-  }
-
-  return booking;
-}
-
-async function cancelBooking(clientId, bookingId) {
-  const booking = await getClientBooking(clientId, bookingId);
-
-  if (![STATUS.EN_ATTENTE, STATUS.VALIDEE, STATUS.PAYEE].includes(booking.status)) {
-    throw makeError(409, 'Cette réservation ne peut plus être annulée.');
-  }
-
-  const daysLeft = daysBetween(today(), booking.date);
-  if (daysLeft <= CANCELLATION_MIN_DAYS) {
-    throw makeError(409, 'Annulation impossible : la date est dans moins de 7 jours.');
-  }
-
-  await Creneau.updateMany(
-    { reservationId: booking._id },
-    { status: 'DISPONIBLE', reservationId: null }
-  );
-
-  booking.status = STATUS.ANNULEE;
-  booking.cancelledAt = new Date();
-  await booking.save();
-
-  return getClientBooking(clientId, booking._id);
-}
-
-module.exports = {
-  getRoomInfo,
-  createBooking,
-  getAgentRooms,
-  listAgentBookings,
-  getAgentBooking,
-  listClientBookings,
-  getClientBooking,
-  validateBooking,
-  rejectBooking,
-  cancelBooking,
-  makeError,
-};
+module.exports = { getRoomInfo, createBooking, getAgentRooms, listAgentBookings, makeError };
 
