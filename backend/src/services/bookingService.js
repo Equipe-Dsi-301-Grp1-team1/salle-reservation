@@ -9,9 +9,8 @@ const {
   MAX_HOURS,
   EVENT_TYPES,
   PAYMENT_DEADLINE_HOURS,
-  CANCELLATION_MIN_DAYS,
 } = require('../constants/bookingStatus');
-const { toDay, today, daysBetween, makeReference } = require('../utils/bookingDate');
+const { toDay, today, makeReference } = require('../utils/bookingDate');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -191,67 +190,14 @@ async function rejectBooking(agentId, bookingId, reason) {
   return getAgentBooking(agentId, booking._id);
 }
 
-async function listClientBookings(clientId, status) {
-  const query = { clientId: clientId };
-  if (status && Object.values(STATUS).includes(status)) {
-    query.status = status;
-  }
-
-  return Reservation.find(query)
-    .populate('roomId', 'name address photos')
-    .sort({ createdAt: -1 });
-}
-
-async function getClientBooking(clientId, bookingId) {
-  if (!mongoose.isValidObjectId(bookingId)) {
-    throw makeError(404, 'Réservation introuvable.');
-  }
-
-  const booking = await Reservation.findOne({ _id: bookingId, clientId: clientId })
-    .populate('roomId', 'name address pricePerHour photos');
-
-  if (!booking) {
-    throw makeError(404, 'Réservation introuvable.');
-  }
-
-  return booking;
-}
-
-async function cancelBooking(clientId, bookingId) {
-  const booking = await getClientBooking(clientId, bookingId);
-
-  if (![STATUS.EN_ATTENTE, STATUS.VALIDEE, STATUS.PAYEE].includes(booking.status)) {
-    throw makeError(409, 'Cette réservation ne peut plus être annulée.');
-  }
-
-  const daysLeft = daysBetween(today(), booking.date);
-  if (daysLeft <= CANCELLATION_MIN_DAYS) {
-    throw makeError(409, 'Annulation impossible : la date est dans moins de 7 jours.');
-  }
-
-  await Creneau.updateMany(
-    { reservationId: booking._id },
-    { status: 'DISPONIBLE', reservationId: null }
-  );
-
-  booking.status = STATUS.ANNULEE;
-  booking.cancelledAt = new Date();
-  await booking.save();
-
-  return getClientBooking(clientId, booking._id);
-}
-
 module.exports = {
   getRoomInfo,
   createBooking,
   getAgentRooms,
   listAgentBookings,
   getAgentBooking,
-  listClientBookings,
-  getClientBooking,
   validateBooking,
   rejectBooking,
-  cancelBooking,
   makeError,
 };
 

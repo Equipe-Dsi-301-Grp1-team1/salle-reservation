@@ -1,0 +1,11 @@
+<div class="panel">
+  <h3>Décision</h3>
+
+  <form method="post" action="/agent/requests/<%= booking.id %>/validate?agentId=<%= agentId %>" class="inline"
+        onsubmit="return confirm('Valider cette demande ? Le jour sera réservé.');">
+    <input type="hidden" name="agentId" value="<%= agentId %>">
+    <button type="submit" class="primary">Valider la demande</button>
+  </form>
+
+  <%- include('_reject-modal', { booking: booking, agentId: agentId }) %>
+</div>
