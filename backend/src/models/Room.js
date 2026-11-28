@@ -25,7 +25,14 @@ const schema = new Schema({
       message: 'Un ou plusieurs équipements sont invalides.'
     }
   },
-  photos: { type: [String], validate: (v) => v.length <= 5 },
+  photos: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: (items) => items.length <= 5,
+      message: 'Une salle peut avoir 5 photos au maximum.'
+    }
+  },
   isPublished: { type: Boolean, default: true },
   ratingAverage: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },

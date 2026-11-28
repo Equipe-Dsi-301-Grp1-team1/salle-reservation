@@ -1,0 +1,7 @@
+<%- include('../partials/header', { title: 'Photos · ' + room.name }) %>
+
+<p class="links"><a href="/agent/rooms/<%= roomId %>/creneaux?agentId=<%= agentId %>">Voir les disponibilités de cette salle</a></p>
+
+<%- include('_photo-uploader', { agentId: agentId, roomId: roomId, photos: photos, room: room }) %>
+
+<%- include('../partials/footer') %>

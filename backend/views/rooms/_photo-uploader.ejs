@@ -1,0 +1,46 @@
+<%# Partial : formulaire d'envoi + photos déjà ajoutées. Variables : agentId, roomId, photos %>
+<% const maxPhotos = 5; %>
+<% const remaining = maxPhotos - photos.length; %>
+
+<div class="panel" id="photo-uploader" data-max-photos="<%= maxPhotos %>" data-remaining="<%= remaining %>" data-max-size="5242880">
+  <p><strong><%= photos.length %> / <%= maxPhotos %> photos</strong> · formats JPEG, PNG ou WebP · 5 Mo maximum par photo</p>
+
+  <% if (remaining > 0) { %>
+    <form method="POST" enctype="multipart/form-data"
+          action="/agent/rooms/<%= roomId %>/photos?agentId=<%= agentId %>">
+      <label>Ajouter des photos
+        <input type="file" name="photos" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple required>
+      </label>
+      <p id="photo-error" class="error" hidden></p>
+      <div id="photo-preview" class="photo-grid"></div>
+      <button type="submit" id="photo-submit">Envoyer les photos</button>
+    </form>
+  <% } else { %>
+    <p class="error">Limite atteinte : supprimez une photo pour en ajouter une autre.</p>
+  <% } %>
+</div>
+
+<h2>Photos de la salle</h2>
+<% if (photos.length === 0) { %>
+  <p>Aucune photo pour le moment.</p>
+<% } else { %>
+  <div class="photo-grid">
+    <% photos.forEach(function (photo) { %>
+      <figure class="photo-card">
+        <img src="<%= photo %>" alt="Photo de la salle <%= room.name %>">
+        <form class="inline" method="POST"
+              action="/agent/rooms/<%= roomId %>/photos/<%= photo.split('/').pop() %>/delete?agentId=<%= agentId %>"
+              onsubmit="return confirm('Supprimer cette photo ?');">
+          <button type="submit">Supprimer</button>
+        </form>
+      </figure>
+    <% }); %>
+  </div>
+<% } %>
+
+<style>
+  .photo-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+  .photo-card, .photo-preview-item { width: 160px; margin: 0; text-align: center; }
+  .photo-card img, .photo-preview-item img { width: 160px; height: 110px; object-fit: cover; border: 1px solid #ccc; }
+</style>
+<script src="/js/photo-preview.js" defer></script>
