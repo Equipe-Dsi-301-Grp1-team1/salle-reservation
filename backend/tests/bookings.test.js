@@ -422,3 +422,86 @@ describe('US-29', () => {
     expect(res.body[0].reference).toBe('RES-PAY');
   });
 });
+
+describe('US-30', () => {
+  test('detail de ma reservation', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() + 10 * 60 * 60 * 1000),
+    });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id)
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.statusLabel).toBe('Validée');
+    expect(res.body.room.name).toBe('Salle Carthage');
+  });
+
+  test('reservation d un autre client en 404', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const other = await makeClient('Marc');
+    const booking = await directBooking({ client: other, room });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id)
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(404);
+  });
+});
+
+describe('US-31', () => {
+  test('annulation a 8 jours et jour libere', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const date = isoFromToday(8);
+    const creneau = await openDay(room, date, 'RESERVE');
+    const booking = await directBooking({
+      client, room, date, status: 'VALIDEE', creneaux: [creneau._id],
+    });
+    creneau.reservationId = booking._id;
+    await creneau.save();
+
+    const res = await request(app)
+      .patch('/api/bookings/' + booking._id + '/cancel')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.booking.status).toBe('ANNULEE');
+    expect((await Creneau.findById(creneau._id)).status).toBe('DISPONIBLE');
+  });
+
+  test('refus a 7 jours', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, date: isoFromToday(7), status: 'VALIDEE' });
+
+    const res = await request(app)
+      .patch('/api/bookings/' + booking._id + '/cancel')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  test('statut final non annulable', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'REFUSEE', date: isoFromToday(20) });
+
+    const res = await request(app)
+      .patch('/api/bookings/' + booking._id + '/cancel')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(409);
+  });
+});

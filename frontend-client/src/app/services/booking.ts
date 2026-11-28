@@ -36,6 +36,32 @@ export interface Booking {
     expiresAt?: string;
 }
 
+export interface ClientBooking {
+    id: string;
+    reference: string;
+    room: {
+        id: string;
+        name: string;
+        address: string;
+        pricePerHour: number;
+        photo: string;
+    };
+    date: string;
+    dateLabel: string;
+    hours: number;
+    guests: number;
+    eventType: string;
+    amount: number;
+    status: string;
+    statusLabel: string;
+    statusClass: string;
+    rejectionReason: string;
+    expiresAt: string | null;
+    hoursLeft: number;
+    daysLeft: number;
+    canCancel: boolean;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -70,5 +96,19 @@ export class BookingService {
             url += '?status=' + status;
         }
         return this.http.get<Booking[]>(url, { headers: this.headers() });
+    }
+
+    getOne(id: string): Observable<ClientBooking> {
+        return this.http.get<ClientBooking>(`${this.apiUrl}/bookings/${id}`, {
+            headers: this.headers()
+        });
+    }
+
+    cancelBooking(id: string): Observable<{ message: string; booking: ClientBooking }> {
+        return this.http.patch<{ message: string; booking: ClientBooking }>(
+            `${this.apiUrl}/bookings/${id}/cancel`,
+            {},
+            { headers: this.headers() }
+        );
     }
 }

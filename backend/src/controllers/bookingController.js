@@ -1,4 +1,5 @@
 const bookingService = require('../services/bookingService');
+const { toClientView } = require('../utils/bookingPresenter');
 
 async function getRoom(req, res) {
   try {
@@ -30,4 +31,25 @@ async function listMine(req, res) {
   }
 }
 
-module.exports = { getRoom, create, listMine };
+async function detailMine(req, res) {
+  try {
+    const booking = await bookingService.getClientBooking(req.user.id, req.params.id);
+    res.json(toClientView(booking));
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+}
+
+async function cancel(req, res) {
+  try {
+    const booking = await bookingService.cancelBooking(req.user.id, req.params.id);
+    res.json({
+      message: 'Votre réservation est annulée.',
+      booking: toClientView(booking),
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+}
+
+module.exports = { getRoom, create, listMine, detailMine, cancel };
