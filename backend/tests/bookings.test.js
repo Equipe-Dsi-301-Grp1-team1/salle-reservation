@@ -920,3 +920,152 @@ describe('US-50', () => {
     expect(res.body.counts.find((c) => c.status === 'EN_ATTENTE').count).toBe(1);
   });
 });
+
+describe('US-51', () => {
+  test('revenus du mois', async () => {
+    const agent = await makeAgent();
+    const otherAgent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const otherRoom = await makeRoom(otherAgent._id);
+    const client = await makeClient();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    await directBooking({ client, room, status: 'PAYEE', amount: 90, date: today });
+    await directBooking({ client, room, status: 'VALIDEE', amount: 60, date: today });
+    await directBooking({ client, room: otherRoom, status: 'PAYEE', amount: 200, date: today });
+
+    const res = await request(app).get('/api/agent/dashboard?agentId=' + agent._id);
+
+    expect(res.body.revenue.monthTotal).toBe(90);
+    expect(res.body.revenue.months).toHaveLength(5);
+  });
+});
+
+describe('US-52', () => {
+  test('avis apres reservation terminee', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'TERMINEE', date: '2025-01-07' });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/review')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send({ rating: 5, comment: 'Très belle salle, accueil parfait.' });
+
+    expect(res.statusCode).toBe(201);
+    const updated = await Room.findById(room._id);
+    expect(updated.reviewCount).toBe(1);
+    expect(updated.ratingAverage).toBe(5);
+  });
+
+  test('refus si non terminee', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'PAYEE' });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/review')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send({ rating: 5, comment: 'Excellent endroit pour travailler.' });
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  test('note hors bornes et doublon', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'TERMINEE', date: '2025-01-07' });
+
+    const bad = await request(app)
+      .post('/api/bookings/' + booking._id + '/review')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send({ rating: 6, comment: 'Commentaire assez long.' });
+    expect(bad.statusCode).toBe(400);
+
+    await request(app)
+      .post('/api/bookings/' + booking._id + '/review')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send({ rating: 4, comment: 'Bonne salle, je recommande.' });
+
+    const twice = await request(app)
+      .post('/api/bookings/' + booking._id + '/review')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send({ rating: 3, comment: 'Deuxième avis interdit.' });
+    expect(twice.statusCode).toBe(409);
+  });
+});
+
+describe('US-53', () => {
+  test('moyenne et liste des avis', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const other = await makeClient('Marc');
+
+    await Review.create({ roomId: room._id, clientId: client._id, reservationId: new mongoose.Types.ObjectId(), clientName: 'Sarra', rating: 5, comment: 'Salle très agréable et bien équipée.' });
+    await Review.create({ roomId: room._id, clientId: other._id, reservationId: new mongoose.Types.ObjectId(), clientName: 'Marc', rating: 4, comment: 'Bon accueil, un peu de bruit dehors.' });
+
+    const res = await request(app).get('/api/rooms/' + room._id + '/reviews');
+
+    expect(res.body.count).toBe(2);
+    expect(res.body.average).toBe(4.5);
+  });
+
+  test('salle sans avis', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+
+    const res = await request(app).get('/api/rooms/' + room._id + '/reviews');
+
+    expect(res.body.count).toBe(0);
+    expect(res.body.average).toBe(0);
+  });
+});
+
+describe('US-54', () => {
+  test('recu PDF du proprietaire', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'PAYEE', date: '2025-01-07' });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id + '/receipt')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.length).toBeGreaterThan(1000);
+  });
+
+  test('refus si non payee', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'VALIDEE' });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id + '/receipt')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  test('un autre client en 404', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const other = await makeClient('Marc');
+    const booking = await directBooking({ client: other, room, status: 'PAYEE' });
+
+    const res = await request(app)
+      .get('/api/bookings/' + booking._id + '/receipt')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(404);
+  });
+});
