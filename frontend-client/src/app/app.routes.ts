@@ -33,6 +33,11 @@ export const routes: Routes = [
         component: AgentRoomFormComponent
     },
     {
+        path: 'reservations',
+        canActivate: [authGuard],
+        loadChildren: () => import('./pages/reservations/reservations.routes').then(m => m.RESERVATION_ROUTES)
+    },
+    {
         path: '',
         redirectTo: 'login',
         pathMatch: 'full'
