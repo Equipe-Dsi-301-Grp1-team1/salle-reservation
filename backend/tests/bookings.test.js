@@ -505,3 +505,25 @@ describe('US-31', () => {
     expect(res.statusCode).toBe(409);
   });
 });
+
+describe('US-36', () => {
+  test('historique limite aux salles de l agent', async () => {
+    const agent = await makeAgent();
+    const otherAgent = await makeAgent();
+    const roomA = await makeRoom(agent._id, { name: 'Salle A' });
+    const roomC = await makeRoom(otherAgent._id, { name: 'Salle C' });
+    const client = await makeClient();
+
+    const current = await directBooking({ client, room: roomA, reference: 'RES-COURANTE' });
+    await directBooking({ client, room: roomA, reference: 'RES-PAYEE', status: 'PAYEE', date: '2029-01-07' });
+    await directBooking({ client, room: roomC, reference: 'RES-AUTRE-AGENT', status: 'PAYEE', date: '2029-02-07' });
+
+    const res = await request(app).get(
+      '/api/agent/bookings/' + current._id + '?agentId=' + agent._id
+    );
+
+    expect(res.body.history.total).toBe(1);
+    expect(res.body.history.paidTotal).toBe(90);
+    expect(res.body.history.items[0].reference).toBe('RES-PAYEE');
+  });
+});

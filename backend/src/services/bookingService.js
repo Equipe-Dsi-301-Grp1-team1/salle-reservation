@@ -8,10 +8,12 @@ const {
   MIN_HOURS,
   MAX_HOURS,
   EVENT_TYPES,
+  STATUS_LABELS,
   PAYMENT_DEADLINE_HOURS,
   CANCELLATION_MIN_DAYS,
 } = require('../constants/bookingStatus');
 const { toDay, today, daysBetween, makeReference } = require('../utils/bookingDate');
+const { toView } = require('../utils/bookingPresenter');
 
 function makeError(status, message) {
   const error = new Error(message);
@@ -241,6 +243,46 @@ async function cancelBooking(clientId, bookingId) {
   return getClientBooking(clientId, booking._id);
 }
 
+async function getClientHistory(agentId, clientId, currentBookingId) {
+  const rooms = await getAgentRooms(agentId);
+  const roomIds = rooms.map(function (room) {
+    return room._id;
+  });
+
+  const bookings = await Reservation.find({
+    clientId: clientId,
+    roomId: { $in: roomIds },
+    _id: { $ne: currentBookingId },
+  })
+    .populate('roomId', 'name')
+    .sort({ date: -1 });
+
+  const byStatus = {};
+  let paidTotal = 0;
+
+  bookings.forEach(function (booking) {
+    byStatus[booking.status] = (byStatus[booking.status] || 0) + 1;
+    if (booking.status === STATUS.PAYEE || booking.status === STATUS.TERMINEE) {
+      paidTotal += booking.amount;
+    }
+  });
+
+  const counts = Object.keys(byStatus).map(function (status) {
+    return {
+      status: status,
+      label: STATUS_LABELS[status] || status,
+      count: byStatus[status],
+    };
+  });
+
+  return {
+    total: bookings.length,
+    counts: counts,
+    paidTotal: Math.round(paidTotal * 100) / 100,
+    items: bookings.slice(0, 10).map(toView),
+  };
+}
+
 module.exports = {
   getRoomInfo,
   createBooking,
@@ -249,6 +291,7 @@ module.exports = {
   getAgentBooking,
   listClientBookings,
   getClientBooking,
+  getClientHistory,
   validateBooking,
   rejectBooking,
   cancelBooking,
