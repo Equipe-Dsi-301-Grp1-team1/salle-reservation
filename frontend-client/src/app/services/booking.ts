@@ -111,4 +111,20 @@ export class BookingService {
             { headers: this.headers() }
         );
     }
+
+    pay(id: string): Observable<{ message: string; mode: string; url: string | null; amount: number }> {
+        return this.http.post<{ message: string; mode: string; url: string | null; amount: number }>(
+            `${this.apiUrl}/bookings/${id}/pay`,
+            {},
+            { headers: this.headers() }
+        );
+    }
+
+    confirmDemoPayment(id: string): Observable<{ message: string; booking: ClientBooking }> {
+        return this.http.post<{ message: string; booking: ClientBooking }>(
+            `${this.apiUrl}/bookings/${id}/pay/demo`,
+            {},
+            { headers: this.headers() }
+        );
+    }
 }

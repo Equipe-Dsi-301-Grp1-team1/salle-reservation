@@ -37,7 +37,15 @@
             Il vous reste {{ booking.hoursLeft }} heures pour payer.
         </p>
 
+        <p class="succes" *ngIf="paiementSucces">
+            Merci ! Votre paiement est en cours de confirmation. Actualisez la page dans quelques secondes.
+        </p>
+
         <p class="succes" *ngIf="message">{{ message }}</p>
+
+        <div class="actions" *ngIf="booking.status === 'VALIDEE'">
+            <a class="payer" [routerLink]="['/reservations', booking.id, 'paiement']">Payer maintenant</a>
+        </div>
 
         <div class="actions" *ngIf="booking.canCancel">
             <button type="button" class="annuler" (click)="annuler()">Annuler la réservation</button>

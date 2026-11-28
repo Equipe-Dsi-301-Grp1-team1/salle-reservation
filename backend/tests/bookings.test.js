@@ -505,3 +505,114 @@ describe('US-31', () => {
     expect(res.statusCode).toBe(409);
   });
 });
+
+describe('US-36', () => {
+  test('historique limite aux salles de l agent', async () => {
+    const agent = await makeAgent();
+    const otherAgent = await makeAgent();
+    const roomA = await makeRoom(agent._id, { name: 'Salle A' });
+    const roomC = await makeRoom(otherAgent._id, { name: 'Salle C' });
+    const client = await makeClient();
+
+    const current = await directBooking({ client, room: roomA, reference: 'RES-COURANTE' });
+    await directBooking({ client, room: roomA, reference: 'RES-PAYEE', status: 'PAYEE', date: '2029-01-07' });
+    await directBooking({ client, room: roomC, reference: 'RES-AUTRE-AGENT', status: 'PAYEE', date: '2029-02-07' });
+
+    const res = await request(app).get(
+      '/api/agent/bookings/' + current._id + '?agentId=' + agent._id
+    );
+
+    expect(res.body.history.total).toBe(1);
+    expect(res.body.history.paidTotal).toBe(90);
+    expect(res.body.history.items[0].reference).toBe('RES-PAYEE');
+  });
+});
+
+describe('US-39', () => {
+  test('expiration d une validee echue', async () => {
+    const { expireBookings } = require('../src/jobs/expireBookings');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const creneau = await openDay(room, '2030-01-07', 'RESERVE');
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() - 1000),
+      creneaux: [creneau._id],
+    });
+    creneau.reservationId = booking._id;
+    await creneau.save();
+
+    const count = await expireBookings();
+
+    expect(count).toBe(1);
+    expect((await Reservation.findById(booking._id)).status).toBe('EXPIREE');
+    expect((await Creneau.findById(creneau._id)).status).toBe('DISPONIBLE');
+  });
+
+  test('une payee n expire pas', async () => {
+    const { expireBookings } = require('../src/jobs/expireBookings');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'PAYEE',
+      expiresAt: new Date(Date.now() - 1000),
+    });
+
+    await expireBookings();
+
+    expect((await Reservation.findById(booking._id)).status).toBe('PAYEE');
+  });
+});
+
+describe('US-40', () => {
+  test('refus si non validee', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'EN_ATTENTE' });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/pay')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  test('mode demonstration', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/pay')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.mode).toBe('demo');
+  });
+
+  test('paiement demo passe a Payee', async () => {
+    const Payment = require('../src/models/Payment');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/pay/demo')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.booking.status).toBe('PAYEE');
+    expect((await Payment.findOne({ bookingId: booking._id })).status).toBe('REUSSIE');
+  });
+});
