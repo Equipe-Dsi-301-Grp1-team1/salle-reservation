@@ -9,4 +9,25 @@ async function getRoom(req, res) {
   }
 }
 
-module.exports = { getRoom };
+async function create(req, res) {
+  try {
+    const booking = await bookingService.createBooking(req.user.id, req.body);
+    res.status(201).json({
+      message: 'Votre demande a bien été envoyée.',
+      booking,
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+}
+
+async function listMine(req, res) {
+  try {
+    const bookings = await bookingService.listClientBookings(req.user.id, req.query.status);
+    res.json(bookings);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+}
+
+module.exports = { getRoom, create, listMine };
