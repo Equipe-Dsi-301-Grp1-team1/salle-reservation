@@ -505,3 +505,262 @@ describe('US-31', () => {
     expect(res.statusCode).toBe(409);
   });
 });
+
+describe('US-36', () => {
+  test('historique limite aux salles de l agent', async () => {
+    const agent = await makeAgent();
+    const otherAgent = await makeAgent();
+    const roomA = await makeRoom(agent._id, { name: 'Salle A' });
+    const roomC = await makeRoom(otherAgent._id, { name: 'Salle C' });
+    const client = await makeClient();
+
+    const current = await directBooking({ client, room: roomA, reference: 'RES-COURANTE' });
+    await directBooking({ client, room: roomA, reference: 'RES-PAYEE', status: 'PAYEE', date: '2029-01-07' });
+    await directBooking({ client, room: roomC, reference: 'RES-AUTRE-AGENT', status: 'PAYEE', date: '2029-02-07' });
+
+    const res = await request(app).get(
+      '/api/agent/bookings/' + current._id + '?agentId=' + agent._id
+    );
+
+    expect(res.body.history.total).toBe(1);
+    expect(res.body.history.paidTotal).toBe(90);
+    expect(res.body.history.items[0].reference).toBe('RES-PAYEE');
+  });
+});
+
+describe('US-39', () => {
+  test('expiration d une validee echue', async () => {
+    const { expireBookings } = require('../src/jobs/expireBookings');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const creneau = await openDay(room, '2030-01-07', 'RESERVE');
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() - 1000),
+      creneaux: [creneau._id],
+    });
+    creneau.reservationId = booking._id;
+    await creneau.save();
+
+    const count = await expireBookings();
+
+    expect(count).toBe(1);
+    expect((await Reservation.findById(booking._id)).status).toBe('EXPIREE');
+    expect((await Creneau.findById(creneau._id)).status).toBe('DISPONIBLE');
+  });
+
+  test('une payee n expire pas', async () => {
+    const { expireBookings } = require('../src/jobs/expireBookings');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'PAYEE',
+      expiresAt: new Date(Date.now() - 1000),
+    });
+
+    await expireBookings();
+
+    expect((await Reservation.findById(booking._id)).status).toBe('PAYEE');
+  });
+});
+
+describe('US-40', () => {
+  test('refus si non validee', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'EN_ATTENTE' });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/pay')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  test('mode demonstration', async () => {
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/pay')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.mode).toBe('demo');
+  });
+
+  test('paiement demo passe a Payee', async () => {
+    const Payment = require('../src/models/Payment');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({
+      client, room, status: 'VALIDEE',
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    });
+
+    const res = await request(app)
+      .post('/api/bookings/' + booking._id + '/pay/demo')
+      .set('Authorization', 'Bearer ' + tokenFor(client));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.booking.status).toBe('PAYEE');
+    expect((await Payment.findOne({ bookingId: booking._id })).status).toBe('REUSSIE');
+  });
+});
+
+describe('US-41', () => {
+  function payload(bookingId, eventId, sessionId) {
+    return JSON.stringify({
+      id: eventId,
+      object: 'event',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: sessionId,
+          object: 'checkout.session',
+          metadata: { bookingId: bookingId },
+          amount_total: 9000,
+        },
+      },
+    });
+  }
+
+  function signature(body) {
+    const Stripe = require('stripe');
+    const client = new Stripe('sk_test_123');
+    return client.webhooks.generateTestHeaderString({
+      payload: body,
+      secret: 'whsec_test',
+    });
+  }
+
+  test('evenement signe confirme le paiement', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+    const Payment = require('../src/models/Payment');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'VALIDEE' });
+    const body = payload(booking._id.toString(), 'evt_1', 'cs_1');
+
+    const res = await request(app)
+      .post('/api/payments/webhook')
+      .set('Content-Type', 'application/json')
+      .set('stripe-signature', signature(body))
+      .send(body);
+
+    expect(res.statusCode).toBe(200);
+    expect((await Reservation.findById(booking._id)).status).toBe('PAYEE');
+    expect(await Payment.countDocuments({ bookingId: booking._id })).toBe(1);
+  });
+
+  test('meme evenement deux fois', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+    const Payment = require('../src/models/Payment');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'VALIDEE' });
+    const body = payload(booking._id.toString(), 'evt_2', 'cs_2');
+    const sig = signature(body);
+
+    await request(app)
+      .post('/api/payments/webhook')
+      .set('Content-Type', 'application/json')
+      .set('stripe-signature', sig)
+      .send(body);
+    await request(app)
+      .post('/api/payments/webhook')
+      .set('Content-Type', 'application/json')
+      .set('stripe-signature', sig)
+      .send(body);
+
+    expect(await Payment.countDocuments({ bookingId: booking._id })).toBe(1);
+  });
+
+  test('signature invalide', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, status: 'VALIDEE' });
+    const body = payload(booking._id.toString(), 'evt_3', 'cs_3');
+
+    const res = await request(app)
+      .post('/api/payments/webhook')
+      .set('Content-Type', 'application/json')
+      .set('stripe-signature', 't=1,v1=invalide')
+      .send(body);
+
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe('US-43', () => {
+  test('email de nouvelle demande a l agent', async () => {
+    const emailService = require('../src/services/emailService');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    await openDay(room, '2030-01-07');
+    const client = await makeClient();
+    const spy = jest.spyOn(emailService, 'sendMail').mockResolvedValue();
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer ' + tokenFor(client))
+      .send(bookingBody(room));
+
+    const mail = spy.mock.calls.find((c) => c[0].subject.includes('Nouvelle demande'));
+    expect(mail).toBeTruthy();
+    expect(mail[0].to).toBe(agent.email);
+  });
+});
+
+describe('US-44', () => {
+  test('email de validation au client', async () => {
+    const emailService = require('../src/services/emailService');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const creneau = await openDay(room, '2030-01-07');
+    const client = await makeClient();
+    const booking = await directBooking({ client, room, creneaux: [creneau._id] });
+    const spy = jest.spyOn(emailService, 'sendMail').mockResolvedValue();
+
+    await request(app).post('/api/agent/bookings/' + booking._id + '/validate?agentId=' + agent._id);
+
+    const mail = spy.mock.calls.find((c) => c[0].subject.includes('Demande validée'));
+    expect(mail).toBeTruthy();
+    expect(mail[0].to).toBe(client.email);
+  });
+});
+
+describe('US-45', () => {
+  test('email de refus avec motif', async () => {
+    const emailService = require('../src/services/emailService');
+    const agent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const client = await makeClient();
+    const booking = await directBooking({ client, room });
+    const spy = jest.spyOn(emailService, 'sendMail').mockResolvedValue();
+
+    await request(app)
+      .post('/api/agent/bookings/' + booking._id + '/reject?agentId=' + agent._id)
+      .send({ reason: 'Salle en travaux.' });
+
+    const mail = spy.mock.calls.find((c) => c[0].subject.includes('Demande refusée'));
+    expect(mail).toBeTruthy();
+    expect(mail[0].html).toContain('Salle en travaux.');
+  });
+});
