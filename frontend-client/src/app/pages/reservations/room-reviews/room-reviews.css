@@ -1,0 +1,63 @@
+.avis {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.resume {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.resume strong {
+    font-size: 26px;
+    color: #1e3a8a;
+}
+
+.resume span {
+    color: #555;
+}
+
+.liste {
+    margin-top: 15px;
+}
+
+.item {
+    border-top: 1px solid #eee;
+    padding: 12px 0;
+}
+
+.ligne {
+    display: flex;
+    justify-content: space-between;
+}
+
+.nom {
+    font-weight: bold;
+}
+
+.etoiles {
+    color: #f59e0b;
+}
+
+.commentaire {
+    margin: 6px 0;
+}
+
+.date {
+    color: #777;
+    font-size: 12px;
+    margin: 0;
+}
+
+.vide {
+    color: #555;
+    text-align: center;
+}
+
+.error {
+    color: red;
+}
