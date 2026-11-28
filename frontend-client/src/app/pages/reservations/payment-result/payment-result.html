@@ -1,0 +1,27 @@
+<div class="page">
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+
+    <div class="carte" *ngIf="booking">
+        <ng-container *ngIf="succes">
+            <h2 class="ok" *ngIf="booking.status === 'PAYEE'">Paiement confirmé</h2>
+            <h2 class="attente" *ngIf="booking.status !== 'PAYEE'">Paiement en cours de confirmation</h2>
+
+            <p *ngIf="booking.status === 'PAYEE'">
+                Votre réservation {{ booking.reference }} est payée. Un e-mail de confirmation vous sera envoyé.
+            </p>
+            <p *ngIf="booking.status !== 'PAYEE'">
+                Stripe a bien reçu votre paiement. La confirmation peut prendre quelques secondes.
+            </p>
+
+            <button type="button" *ngIf="booking.status !== 'PAYEE'" (click)="charger()">Actualiser</button>
+        </ng-container>
+
+        <ng-container *ngIf="!succes">
+            <h2 class="echec">Paiement annulé</h2>
+            <p>Le paiement n'a pas été effectué. Votre réservation reste valide jusqu'à la fin du délai de 48 h.</p>
+            <a class="bouton" [routerLink]="['/reservations', booking.id, 'paiement']">Réessayer le paiement</a>
+        </ng-container>
+
+        <p class="retour"><a routerLink="/reservations">Voir mes réservations</a></p>
+    </div>
+</div>
