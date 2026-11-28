@@ -4,5 +4,6 @@ const clientOnly = require('../middlewares/clientOnly');
 
 router.get('/bookings/room/:roomId', bookingController.getRoom);
 router.post('/bookings', clientOnly, bookingController.create);
+router.get('/bookings/me', clientOnly, bookingController.listMine);
 
 module.exports = router;

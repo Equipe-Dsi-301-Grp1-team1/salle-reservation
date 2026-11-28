@@ -21,4 +21,13 @@ async function create(req, res) {
   }
 }
 
-module.exports = { getRoom, create };
+async function listMine(req, res) {
+  try {
+    const bookings = await bookingService.listClientBookings(req.user.id, req.query.status);
+    res.json(bookings);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+}
+
+module.exports = { getRoom, create, listMine };
