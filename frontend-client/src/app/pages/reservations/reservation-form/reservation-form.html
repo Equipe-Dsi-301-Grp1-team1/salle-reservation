@@ -1,0 +1,56 @@
+<div class="form-container">
+    <h2>Demander une réservation</h2>
+
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+
+    <div class="success" *ngIf="message">
+        <p>{{ message }}</p>
+        <p>Référence : <strong>{{ reference }}</strong></p>
+        <p>Votre demande est en attente de la réponse de l'agent.</p>
+        <a routerLink="/reservations">Voir mes réservations</a>
+    </div>
+
+    <div *ngIf="room && !message">
+        <p class="room-name">{{ room.name }}</p>
+        <p class="room-info">{{ room.address }} · {{ room.capacity }} personnes</p>
+        <p class="room-price">{{ room.pricePerHour }} € par heure</p>
+
+        <form (ngSubmit)="envoyer()">
+            <div>
+                <label for="date">Date de l'événement</label>
+                <input id="date" name="date" type="date" [(ngModel)]="date" required>
+            </div>
+
+            <div>
+                <label for="hours">Nombre d'heures</label>
+                <select id="hours" name="hours" [(ngModel)]="hours">
+                    <option *ngFor="let h of heures" [ngValue]="h">{{ h }} h</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="guests">Nombre d'invités</label>
+                <input id="guests" name="guests" type="number" min="1" [max]="room.capacity" [(ngModel)]="guests" required>
+            </div>
+
+            <div>
+                <label for="eventType">Type d'événement</label>
+                <select id="eventType" name="eventType" [(ngModel)]="eventType" required>
+                    <option value="">Choisir...</option>
+                    <option *ngFor="let type of typesEvenement" [value]="type">{{ type }}</option>
+                </select>
+            </div>
+
+            <div class="total">
+                <span>Total à payer</span>
+                <strong>{{ totalAffiche }}</strong>
+            </div>
+
+            <button type="submit" [disabled]="envoi">
+                {{ envoi ? 'Envoi...' : 'Envoyer la demande' }}
+            </button>
+        </form>
+    </div>
+
+    <p class="loading" *ngIf="!room && !erreur">Chargement de la salle...</p>
+</div>
