@@ -39,6 +39,14 @@
 
         <p class="succes" *ngIf="message">{{ message }}</p>
 
+        <div class="actions" *ngIf="booking.status === 'VALIDEE'">
+            <a class="payer" [routerLink]="['/reservations', booking.id, 'paiement']">Payer maintenant</a>
+        </div>
+
+        <div class="actions" *ngIf="booking.status === 'TERMINEE'">
+            <a class="payer" [routerLink]="['/reservations', booking.id, 'avis']">Laisser un avis</a>
+        </div>
+
         <div class="actions" *ngIf="booking.canCancel">
             <button type="button" class="annuler" (click)="annuler()">Annuler la réservation</button>
         </div>

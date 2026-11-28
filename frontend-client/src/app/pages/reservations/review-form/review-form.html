@@ -1,0 +1,38 @@
+<div class="page">
+    <p><a routerLink="/reservations">← Retour à mes réservations</a></p>
+
+    <p class="error" *ngIf="erreur">{{ erreur }}</p>
+    <p class="message" *ngIf="message">{{ message }}</p>
+
+    <div class="carte" *ngIf="booking && !message">
+        <h2>Laisser un avis</h2>
+        <p class="salle">{{ booking.room.name }}</p>
+
+        <p class="refus" *ngIf="booking.status !== 'TERMINEE'">
+            Vous pourrez laisser un avis après la date de l'événement.
+        </p>
+
+        <form *ngIf="booking.status === 'TERMINEE'" (ngSubmit)="envoyer()">
+            <div>
+                <label for="rating">Note</label>
+                <select id="rating" name="rating" [(ngModel)]="rating">
+                    <option [ngValue]="5">5 - Excellent</option>
+                    <option [ngValue]="4">4 - Très bien</option>
+                    <option [ngValue]="3">3 - Bien</option>
+                    <option [ngValue]="2">2 - Moyen</option>
+                    <option [ngValue]="1">1 - À éviter</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="comment">Votre commentaire</label>
+                <textarea id="comment" name="comment" rows="5" maxlength="500" [(ngModel)]="comment" required></textarea>
+                <p class="compteur">{{ comment.length }} / 500 caractères</p>
+            </div>
+
+            <button type="submit" [disabled]="envoi">
+                {{ envoi ? 'Envoi...' : 'Publier mon avis' }}
+            </button>
+        </form>
+    </div>
+</div>

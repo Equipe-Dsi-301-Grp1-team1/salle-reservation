@@ -62,6 +62,17 @@ export interface ClientBooking {
     canCancel: boolean;
 }
 
+export interface PaymentItem {
+    id: string;
+    reference: string;
+    room: string;
+    date: string;
+    dateLabel: string;
+    amount: number;
+    paidAt: string;
+    status: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -110,5 +121,35 @@ export class BookingService {
             {},
             { headers: this.headers() }
         );
+    }
+
+    pay(id: string): Observable<{ message: string; mode: string; url: string | null; amount: number }> {
+        return this.http.post<{ message: string; mode: string; url: string | null; amount: number }>(
+            `${this.apiUrl}/bookings/${id}/pay`,
+            {},
+            { headers: this.headers() }
+        );
+    }
+
+    confirmDemoPayment(id: string): Observable<{ message: string; booking: ClientBooking }> {
+        return this.http.post<{ message: string; booking: ClientBooking }>(
+            `${this.apiUrl}/bookings/${id}/pay/demo`,
+            {},
+            { headers: this.headers() }
+        );
+    }
+
+    createReview(id: string, data: { rating: number; comment: string }): Observable<{ message: string }> {
+        return this.http.post<{ message: string }>(
+            `${this.apiUrl}/bookings/${id}/review`,
+            data,
+            { headers: this.headers() }
+        );
+    }
+
+    listPayments(): Observable<PaymentItem[]> {
+        return this.http.get<PaymentItem[]>(`${this.apiUrl}/payments/me`, {
+            headers: this.headers()
+        });
     }
 }
