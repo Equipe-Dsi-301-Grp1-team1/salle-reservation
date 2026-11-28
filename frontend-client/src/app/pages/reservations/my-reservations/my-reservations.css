@@ -1,0 +1,106 @@
+.page {
+    max-width: 950px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.entete {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.entete h2 {
+    color: #1e3a8a;
+    margin: 0;
+}
+
+.entete a {
+    color: #2563eb;
+}
+
+.chips button {
+    padding: 6px 12px;
+    margin: 0 8px 10px 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.chips button.active {
+    background: #1f2937;
+    color: white;
+    border-color: #1f2937;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background: #eef2ff;
+}
+
+.badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.en_attente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.validee {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.payee {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.refusee {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.expiree {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.annulee {
+    background: #f3e8ff;
+    color: #6b21a8;
+}
+
+.terminee {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.vide {
+    text-align: center;
+    color: #555;
+    background: white;
+    padding: 20px;
+}
+
+.error {
+    color: red;
+    text-align: center;
+}
