@@ -1,0 +1,43 @@
+<%- include('../partials/head', { title: title }) %>
+
+<div class="chips">
+  <a class="chip <%= currentStatus === '' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>">Toutes</a>
+  <a class="chip <%= currentStatus === 'EN_ATTENTE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=EN_ATTENTE">En attente</a>
+  <a class="chip <%= currentStatus === 'VALIDEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=VALIDEE">Validées</a>
+  <a class="chip <%= currentStatus === 'REFUSEE' ? 'active' : '' %>" href="/agent/requests?agentId=<%= agentId %>&status=REFUSEE">Refusées</a>
+</div>
+
+<% if (bookings.length === 0) { %>
+  <p class="empty">Aucune demande pour le moment.</p>
+<% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th>Référence</th>
+        <th>Client</th>
+        <th>Salle</th>
+        <th>Date</th>
+        <th>Heures</th>
+        <th>Invités</th>
+        <th>Montant</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% bookings.forEach(function (booking) { %>
+        <tr>
+          <td><%= booking.reference %></td>
+          <td><%= booking.client %></td>
+          <td><%= booking.room %></td>
+          <td><%= booking.dateLabel %></td>
+          <td><%= booking.hours %> h</td>
+          <td><%= booking.guests %></td>
+          <td><%= booking.amount.toFixed(2) %> €</td>
+          <td><span class="badge <%= booking.statusClass %>"><%= booking.statusLabel %></span></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/foot') %>
