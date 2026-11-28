@@ -10,6 +10,19 @@
 </div>
 
 <div class="panel">
+  <h3>Revenus des 5 derniers mois</h3>
+  <p>Revenus du mois en cours : <strong><%= dashboard.revenue.monthTotal.toFixed(2) %> €</strong></p>
+
+  <% dashboard.revenue.months.forEach(function (month) { %>
+    <div class="bar-line">
+      <span class="bar-label"><%= month.label %></span>
+      <span class="bar"><span style="width: <%= month.percent %>%"></span></span>
+      <span class="bar-value"><%= month.total.toFixed(2) %> €</span>
+    </div>
+  <% }); %>
+</div>
+
+<div class="panel">
   <h3>Demandes en attente</h3>
 
   <% if (dashboard.pending.length === 0) { %>

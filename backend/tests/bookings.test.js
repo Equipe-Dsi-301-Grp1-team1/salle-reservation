@@ -920,3 +920,24 @@ describe('US-50', () => {
     expect(res.body.counts.find((c) => c.status === 'EN_ATTENTE').count).toBe(1);
   });
 });
+
+describe('US-51', () => {
+  test('revenus du mois', async () => {
+    const agent = await makeAgent();
+    const otherAgent = await makeAgent();
+    const room = await makeRoom(agent._id);
+    const otherRoom = await makeRoom(otherAgent._id);
+    const client = await makeClient();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    await directBooking({ client, room, status: 'PAYEE', amount: 90, date: today });
+    await directBooking({ client, room, status: 'VALIDEE', amount: 60, date: today });
+    await directBooking({ client, room: otherRoom, status: 'PAYEE', amount: 200, date: today });
+
+    const res = await request(app).get('/api/agent/dashboard?agentId=' + agent._id);
+
+    expect(res.body.revenue.monthTotal).toBe(90);
+    expect(res.body.revenue.months).toHaveLength(5);
+  });
+});
